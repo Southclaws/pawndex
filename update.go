@@ -19,6 +19,10 @@ func (app *App) updateList() (err error) {
 		return errors.Wrap(err, "failed to search repositories")
 	}
 
+	for _, repo := range results.Repositories {
+		app.toScrape <- repo
+	}
+
 	logger.Debug("done updating package list",
 		zap.Int("packages", results.GetTotal()))
 
