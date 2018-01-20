@@ -13,7 +13,7 @@ func (app *App) updateList() (err error) {
 
 	results, _, err := app.gh.Search.Repositories(
 		context.Background(),
-		"language:pawn&topic:pawn-package",
+		"language:pawn",
 		&github.SearchOptions{})
 	if err != nil {
 		return errors.Wrap(err, "failed to search repositories")

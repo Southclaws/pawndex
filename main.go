@@ -44,7 +44,7 @@ func init() {
 
 // Config stores static configuration
 type Config struct {
-	GithubToken    string        // GitHub API token
+	GithubToken    string        `required:"true"` // GitHub API token
 	SearchInterval time.Duration `required:"true"` // interval between checks
 }
 
