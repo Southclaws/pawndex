@@ -49,19 +49,15 @@ func (app *App) Daemon() {
 
 	var scraped *types.Package
 
-	once := true
 	for {
 		select {
 
 		// handles searching GitHub for all Pawn repositories
 		case <-search.C:
-			if once {
-				err := app.updateList()
-				if err != nil {
-					logger.Error("error encountered while updating",
-						zap.Error(err))
-				}
-				once = false
+			err := app.updateList()
+			if err != nil {
+				logger.Error("error encountered while updating",
+					zap.Error(err))
 			}
 
 		// consumes repositories discovered by the search loop and investigates them
