@@ -35,8 +35,14 @@ func Start(config Config) {
 		index:    make(map[string]*types.Package),
 	}
 
-	logger.Info("starting pawndex",
+	logger.Info("starting pawndex and running initial list update",
 		zap.String("version", version))
+
+	err := app.updateList()
+	if err != nil {
+		logger.Error("error encountered while updating",
+			zap.Error(err))
+	}
 
 	go app.runServer()
 	app.Daemon()
