@@ -81,7 +81,6 @@ func (app *App) Daemon() {
 
 		// toIndex consumes repositories that have been confirmed Pawn repos bu scrapeRepo
 		case scraped = <-app.toIndex:
-			fmt.Printf("SCRAPED: %p", scraped)
 			str := fmt.Sprint(scraped)
 			app.index[str] = scraped
 

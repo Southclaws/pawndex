@@ -53,6 +53,9 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 			return
 		}
 
+		meta.User = repo.GetOwner().GetLogin()
+		meta.Repo = repo.GetName()
+
 		logger.Debug("scraped non-package pawn repository",
 			zap.String("meta", fmt.Sprint(meta)))
 
