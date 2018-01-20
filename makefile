@@ -29,6 +29,7 @@ run:
 	docker run \
 		--name pawndex \
 		--publish 7795:80 \
+		--detach \
 		-e BIND=0.0.0.0:80 \
 		-e PAWNDEX_BIND=$(PAWNDEX_BIND) \
 		-e PAWNDEX_GITHUBTOKEN=$(PAWNDEX_GITHUBTOKEN) \
