@@ -11,6 +11,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
+var version string
+
 // App stores the app state
 type App struct {
 	config   Config
@@ -32,6 +34,9 @@ func Start(config Config) {
 		toIndex:  make(chan *types.Package),
 		index:    make(map[string]*types.Package),
 	}
+
+	logger.Info("starting pawndex",
+		zap.String("version", version))
 
 	go app.runServer()
 	app.Daemon()
