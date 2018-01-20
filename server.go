@@ -9,7 +9,10 @@ import (
 )
 
 func (app *App) runServer() {
-	listen, err := net.Listen("tcp4", app.config.Bind)
+	logger.Debug("attempting to bind to interface",
+		zap.String("bind", app.config.Bind))
+
+	listen, err := net.Listen("tcp", app.config.Bind)
 	if err != nil {
 		logger.Fatal("bind failed",
 			zap.Error(err))
