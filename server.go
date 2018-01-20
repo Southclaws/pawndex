@@ -15,6 +15,9 @@ func (app *App) runServer() {
 			zap.Error(err))
 	}
 
+	logger.Info("listening for http requests",
+		zap.String("bind", app.config.Bind))
+
 	var contents []byte
 	err = fasthttp.Serve(listen, func(ctx *fasthttp.RequestCtx) {
 		contents, err = json.Marshal(app.getPackageList())
