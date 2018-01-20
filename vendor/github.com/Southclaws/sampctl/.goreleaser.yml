@@ -1,0 +1,60 @@
+project_name: sampctl
+release:
+  github:
+    owner: Southclaws
+    name: sampctl
+builds:
+  - binary: sampctl
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - "386"
+      - "amd64"
+    env:
+      - CGO_ENABLED=0
+archive:
+  format: tar.gz
+  name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+  files:
+  - licence*
+  - LICENCE*
+  - license*
+  - LICENSE*
+  - readme*
+  - README*
+  - changelog*
+  - CHANGELOG*
+snapshot:
+  name_template: SNAPSHOT-{{ .Commit }}
+checksum:
+  name_template: '{{ .ProjectName }}_{{ .Version }}_checksums.txt'
+dockers:
+  - image: southclaws/sampctl
+    goos: linux
+    goarch: "386"
+    binary: sampctl
+    dockerfile: Dockerfile
+    latest: false
+fpm:
+  vendor: Southclaws
+  homepage: https://github.com/Southclaws/sampctl
+  maintainer: Southclaws <hello@southcla.ws>
+  description: A small utility for starting and managing SA:MP servers with better settings handling and crash resiliency.
+  license: GPLv3
+  formats:
+    - deb
+    - rpm
+brew:
+  github:
+    owner: Southclaws
+    name: homebrew-sampctl
+  homepage: https://github.com/Southclaws/sampctl
+  description: A small utility for starting and managing SA:MP servers with better settings handling and crash resiliency.
+# scoop:
+#   bucket:
+#     owner: Southclaws
+#     name: scoops
+#   homepage: https://github.com/Southclaws/sampctl
+#   description: A small utility for starting and managing SA:MP servers with better settings handling and crash resiliency.

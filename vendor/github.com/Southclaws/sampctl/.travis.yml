@@ -1,0 +1,35 @@
+sudo: required
+services:
+  - docker
+before_install:
+  - sudo apt-get install -qq --force-yes build-essential gcc-multilib > /dev/null
+addons:
+  apt:
+    packages:
+      - docker-ce
+language: go
+jobs:
+  include:
+    - stage: test compiler
+      script: go test -race -v -p 4 ./compiler
+    - stage: test download
+      script: go test -race -v -p 4 ./download
+    - stage: test rook
+      script: go test -race -v -p 4 ./rook
+    - stage: test runtime
+      script: go test -race -v -p 4 ./runtime
+    - stage: test util
+      script: go test -race -v -p 4 ./util
+    - stage: test versioning
+      script: go test -race -v -p 4 ./versioning
+    - stage: deploy
+      if: branch =~ ^(v?(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[\da-z-]+(?:\.[\da-z-]+)*)?(?:\+[\da-z-]+(?:\.[\da-z-]+)*)?)$
+      script:
+        - test -n "$TRAVIS_TAG"
+        - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+        - if [ `uname -m` = x86_64 ]; then sudo apt-get install -qq --force-yes gcc-multilib > /dev/null; fi
+        - sudo apt-get install -y build-essential rpm
+        - gem install --no-ri --no-rdoc fpm
+        - curl -sL https://git.io/goreleaser | bash
+go:
+  - 1.x
