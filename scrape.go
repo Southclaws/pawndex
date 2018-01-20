@@ -53,18 +53,18 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 			return
 		}
 
-		meta.User = repo.GetOwner().GetLogin()
-		meta.Repo = repo.GetName()
-
 		logger.Debug("scraped non-package pawn repository",
 			zap.String("meta", fmt.Sprint(meta)))
 
-		app.toIndex <- &pkg
+		app.toIndex <- &types.Package{DependencyMeta: meta}
 	} else {
+		pkg.User = repo.GetOwner().GetLogin()
+		pkg.Repo = repo.GetName()
+
 		logger.Debug("scraped valid pawn package",
 			zap.String("meta", fmt.Sprint(meta)))
 
-		app.toIndex <- &types.Package{DependencyMeta: meta}
+		app.toIndex <- &pkg
 	}
 
 	return
