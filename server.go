@@ -2,42 +2,45 @@ package main
 
 import (
 	"encoding/json"
-	"net"
+	"net/http"
 
-	"github.com/valyala/fasthttp"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
 
 func (app *App) runServer() {
-	logger.Debug("attempting to bind to interface",
-		zap.String("bind", app.config.Bind))
+	var (
+		err      error
+		contents []byte
+	)
 
-	listen, err := net.Listen("tcp", app.config.Bind)
-	if err != nil {
-		logger.Fatal("bind failed",
-			zap.Error(err))
-	}
-
-	logger.Info("listening for http requests",
-		zap.String("bind", app.config.Bind))
-
-	var contents []byte
-	err = fasthttp.Serve(listen, func(ctx *fasthttp.RequestCtx) {
+	router := mux.NewRouter()
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		contents, err = json.Marshal(app.getPackageList())
 		if err != nil {
 			logger.Error("failed to encode package list",
 				zap.Error(err))
-			ctx.Error("failed to encode", 500)
 			return
 		}
 
-		ctx.SetContentType("application/json")
-		_, err := ctx.Write(contents)
+		w.Header().Set("Content-Type", "application/json")
+		_, err := w.Write(contents)
 		if err != nil {
 			logger.Fatal("failed to write",
 				zap.Error(err))
 		}
 	})
+
+	logger.Info("listening for http requests",
+		zap.String("bind", app.config.Bind))
+
+	err = http.ListenAndServe(app.config.Bind, handlers.CORS(
+		handlers.AllowedHeaders([]string{"Cache-Control", "X-File-Name", "X-Requested-With", "X-File-Name", "Content-Type", "Authorization", "Set-Cookie", "Cookie"}),
+		handlers.AllowedOrigins([]string{"https://" + app.config.Domain, "http://localhost:3000"}),
+		handlers.AllowedMethods([]string{"OPTIONS", "GET", "HEAD", "POST", "PUT"}),
+		handlers.AllowCredentials(),
+	)(router))
 
 	if err != nil {
 		logger.Fatal("serve failed",
