@@ -14,6 +14,9 @@ version:
 	git push
 	git push origin $(VERSION)
 
+test: fast
+	./pawndex
+
 
 # Docker
 

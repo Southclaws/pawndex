@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"path/filepath"
 
 	"github.com/Southclaws/sampctl/types"
 	"github.com/Southclaws/sampctl/versioning"
 	"github.com/google/go-github/github"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -28,20 +28,24 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 
 	pkg, err := types.GetRemotePackage(ctx, app.gh, meta)
 	if err != nil {
-		var files []*github.RepositoryContent
-		_, files, _, err = app.gh.Repositories.GetContents(
-			ctx,
-			meta.User,
-			meta.Repo,
-			"/",
-			&github.RepositoryContentGetOptions{})
+		var ref *github.Reference
+
+		ref, _, err = app.gh.Git.GetRef(ctx, meta.User, meta.Repo, "heads/"+repo.GetDefaultBranch())
 		if err != nil {
-			return
+			return errors.Wrap(err, "failed to get HEAD ref from default branch")
+		}
+
+		sha := ref.GetObject().GetSHA()
+
+		var tree *github.Tree
+		tree, _, err = app.gh.Git.GetTree(ctx, meta.User, meta.Repo, sha, true)
+		if err != nil {
+			return errors.Wrap(err, "failed to get git tree")
 		}
 
 		valid := false
-		for _, file := range files {
-			ext := filepath.Ext(file.GetName())
+		for _, file := range tree.Entries {
+			ext := filepath.Ext(file.GetPath())
 			if ext == ".inc" || ext == ".pwn" {
 				valid = true
 				break
