@@ -41,10 +41,6 @@
   version = "0.8.0"
 
 [[constraint]]
-  name = "github.com/valyala/fasthttp"
-  version = "20160617.0.0"
-
-[[constraint]]
   name = "go.uber.org/zap"
   version = "1.7.1"
 
