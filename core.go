@@ -84,9 +84,6 @@ func (app *App) Daemon() {
 
 		// consumes repositories discovered by the search loop and investigates them
 		case <-scrape.C:
-			logger.Debug("popping queue to scrape",
-				zap.Int("items", len(app.toScrape)))
-
 			go func() {
 				searched := <-app.toScrape
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
