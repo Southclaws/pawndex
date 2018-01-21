@@ -50,7 +50,7 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 		for _, file := range tree.Entries {
 			ext := filepath.Ext(file.GetPath())
 			if ext == ".inc" || ext == ".pwn" {
-				if filepath.Base(file.GetPath()) == "." {
+				if filepath.Dir(file.GetPath()) == "." {
 					pawnAtRoot = true
 				} else {
 					pawnAtAny = true
