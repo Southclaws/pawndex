@@ -18,8 +18,24 @@ type App struct {
 	config   Config
 	gh       *github.Client
 	toScrape chan github.Repository
-	toIndex  chan *types.Package
-	index    map[string]*types.Package
+	toIndex  chan *Package
+	index    map[string]*Package
+}
+
+// Classification represents how compatible or easy to use a package is. If a package contains a
+// package definition file, it's of a higher classification than one that does not contain one.
+type Classification string
+
+var (
+	classificationPawnPackage Classification = "full"
+	classificationBarebones   Classification = "basic"
+	classificationBuried      Classification = "buried"
+)
+
+// Package wraps types.Package and adds extra fields
+type Package struct {
+	types.Package
+	Classification Classification `json:"classification"` // classification represents how conformative the package is
 }
 
 // Start initialises the app and blocks until fatal error
@@ -31,8 +47,8 @@ func Start(config Config) {
 		config:   config,
 		gh:       github.NewClient(tc),
 		toScrape: make(chan github.Repository, 1000),
-		toIndex:  make(chan *types.Package),
-		index:    make(map[string]*types.Package),
+		toIndex:  make(chan *Package),
+		index:    make(map[string]*Package),
 	}
 
 	logger.Info("starting pawndex and running initial list update",
@@ -53,7 +69,7 @@ func (app *App) Daemon() {
 	search := time.NewTicker(app.config.SearchInterval)
 	scrape := time.NewTicker(time.Second)
 
-	var scraped *types.Package
+	var scraped *Package
 
 	for {
 		select {
@@ -68,6 +84,9 @@ func (app *App) Daemon() {
 
 		// consumes repositories discovered by the search loop and investigates them
 		case <-scrape.C:
+			logger.Debug("popping queue to scrape",
+				zap.Int("items", len(app.toScrape)))
+
 			go func() {
 				searched := <-app.toScrape
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
@@ -90,7 +109,7 @@ func (app *App) Daemon() {
 	}
 }
 
-func (app *App) getPackageList() (result []*types.Package) {
+func (app *App) getPackageList() (result []*Package) {
 	for _, pkg := range app.index {
 		result = append(result, pkg)
 	}

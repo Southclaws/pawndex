@@ -43,32 +43,41 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 			return errors.Wrap(err, "failed to get git tree")
 		}
 
-		valid := false
+		pawnAtRoot := false // contains pawn files at root level (/)
+		pawnAtAny := false  // contains pawn files anywhere
 		for _, file := range tree.Entries {
 			ext := filepath.Ext(file.GetPath())
 			if ext == ".inc" || ext == ".pwn" {
-				valid = true
-				break
+				if filepath.Base(file.GetPath()) == "." {
+					pawnAtRoot = true
+				} else {
+					pawnAtAny = true
+				}
 			}
 		}
-		if !valid {
-			logger.Debug("package does not contain pawn source at top level",
+
+		if pawnAtRoot {
+			app.toIndex <- &Package{
+				Package:        types.Package{DependencyMeta: meta},
+				Classification: classificationBarebones,
+			}
+		} else if pawnAtAny {
+			app.toIndex <- &Package{
+				Package:        types.Package{DependencyMeta: meta},
+				Classification: classificationBuried,
+			}
+		} else {
+			logger.Debug("package does not contain pawn source",
 				zap.String("meta", fmt.Sprint(meta)))
-			return
 		}
-
-		logger.Debug("scraped non-package pawn repository",
-			zap.String("meta", fmt.Sprint(meta)))
-
-		app.toIndex <- &types.Package{DependencyMeta: meta}
 	} else {
 		pkg.User = repo.GetOwner().GetLogin()
 		pkg.Repo = repo.GetName()
 
-		logger.Debug("scraped valid pawn package",
-			zap.String("meta", fmt.Sprint(meta)))
-
-		app.toIndex <- &pkg
+		app.toIndex <- &Package{
+			Package:        pkg,
+			Classification: classificationPawnPackage,
+		}
 	}
 
 	return
