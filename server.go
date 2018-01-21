@@ -37,7 +37,7 @@ func (app *App) runServer() {
 
 	err = http.ListenAndServe(app.config.Bind, handlers.CORS(
 		handlers.AllowedHeaders([]string{"Cache-Control", "X-File-Name", "X-Requested-With", "X-File-Name", "Content-Type", "Authorization", "Set-Cookie", "Cookie"}),
-		handlers.AllowedOrigins([]string{"https://" + app.config.Domain, "http://localhost:3000"}),
+		handlers.AllowedOrigins([]string{"http://" + app.config.Domain, "http://localhost:3000"}),
 		handlers.AllowedMethods([]string{"OPTIONS", "GET", "HEAD", "POST", "PUT"}),
 		handlers.AllowCredentials(),
 	)(router))
