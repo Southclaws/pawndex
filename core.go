@@ -36,6 +36,8 @@ var (
 type Package struct {
 	types.Package
 	Classification Classification `json:"classification"` // classification represents how conformative the package is
+	Stars          int            `json:"stars"`          // GitHub stars
+	Updated        time.Time      `json:"updated"`        // last updated
 }
 
 // Start initialises the app and blocks until fatal error

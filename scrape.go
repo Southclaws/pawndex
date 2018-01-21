@@ -26,6 +26,8 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 		return errors.New("repository details empty")
 	}
 
+	var processedPackage *Package // the result - a package with some additional metadata
+
 	pkg, err := types.GetRemotePackage(ctx, app.gh, meta)
 	if err != nil {
 		var ref *github.Reference
@@ -57,12 +59,12 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 		}
 
 		if pawnAtRoot {
-			app.toIndex <- &Package{
+			processedPackage = &Package{
 				Package:        types.Package{DependencyMeta: meta},
 				Classification: classificationBarebones,
 			}
 		} else if pawnAtAny {
-			app.toIndex <- &Package{
+			processedPackage = &Package{
 				Package:        types.Package{DependencyMeta: meta},
 				Classification: classificationBuried,
 			}
@@ -74,10 +76,20 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 		pkg.User = repo.GetOwner().GetLogin()
 		pkg.Repo = repo.GetName()
 
-		app.toIndex <- &Package{
+		repo.GetStargazersCount()
+
+		processedPackage = &Package{
 			Package:        pkg,
 			Classification: classificationPawnPackage,
 		}
+	}
+
+	if processedPackage != nil {
+		// add some generic info
+		processedPackage.Stars = repo.GetStargazersCount()
+		processedPackage.Updated = repo.GetUpdatedAt().Time
+
+		app.toIndex <- processedPackage
 	}
 
 	return
