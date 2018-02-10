@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (app *App) updateList() (err error) {
+func (app *App) updateList(query string) (err error) {
 	logger.Debug("updating package list")
 
 	page := 1
@@ -20,7 +20,7 @@ func (app *App) updateList() (err error) {
 
 		results, _, err := app.gh.Search.Repositories(
 			context.Background(),
-			"language:pawn",
+			query,
 			&github.SearchOptions{ListOptions: github.ListOptions{
 				Page:    page,
 				PerPage: 100,

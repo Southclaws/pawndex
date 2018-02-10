@@ -56,7 +56,7 @@ func Start(config Config) {
 	logger.Info("starting pawndex and running initial list update",
 		zap.String("version", version))
 
-	err := app.updateList()
+	err := app.updateList("language:pawn")
 	if err != nil {
 		logger.Error("error encountered while updating",
 			zap.Error(err))
@@ -71,6 +71,7 @@ func (app *App) Daemon() {
 	search := time.NewTicker(app.config.SearchInterval)
 	scrape := time.NewTicker(time.Second)
 
+	var err error
 	var scraped *Package
 
 	for {
@@ -78,7 +79,13 @@ func (app *App) Daemon() {
 
 		// handles searching GitHub for all Pawn repositories
 		case <-search.C:
-			err := app.updateList()
+			err = app.updateList("topic:pawn-package")
+			if err != nil {
+				logger.Error("error encountered while updating",
+					zap.Error(err))
+			}
+
+			err = app.updateList("language:pawn")
 			if err != nil {
 				logger.Error("error encountered while updating",
 					zap.Error(err))
@@ -89,7 +96,7 @@ func (app *App) Daemon() {
 			go func() {
 				searched := <-app.toScrape
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-				err := app.scrapeRepo(ctx, searched)
+				err = app.scrapeRepo(ctx, searched)
 				if err != nil {
 					logger.Error("failed to scrape repository",
 						zap.Error(err))
