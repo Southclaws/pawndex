@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/Southclaws/sampctl/types"
@@ -20,6 +21,7 @@ type App struct {
 	toScrape chan github.Repository
 	toIndex  chan *Package
 	index    map[string]*Package
+	lock     sync.RWMutex
 }
 
 // Classification represents how compatible or easy to use a package is. If a package contains a
@@ -51,6 +53,7 @@ func Start(config Config) {
 		toScrape: make(chan github.Repository, 1000),
 		toIndex:  make(chan *Package),
 		index:    make(map[string]*Package),
+		lock:     sync.RWMutex{},
 	}
 
 	logger.Info("starting pawndex and running initial list update",
@@ -107,7 +110,10 @@ func (app *App) Daemon() {
 		// toIndex consumes repositories that have been confirmed Pawn repos bu scrapeRepo
 		case scraped = <-app.toIndex:
 			str := fmt.Sprint(scraped)
+
+			app.lock.Lock()
 			app.index[str] = scraped
+			app.lock.Unlock()
 
 			logger.Debug("discovered repo",
 				zap.String("meta", str))
@@ -116,8 +122,10 @@ func (app *App) Daemon() {
 }
 
 func (app *App) getPackageList() (result []*Package) {
+	app.lock.RLock()
 	for _, pkg := range app.index {
 		result = append(result, pkg)
 	}
+	app.lock.RUnlock()
 	return
 }
