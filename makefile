@@ -33,9 +33,5 @@ run:
 		--name pawndex \
 		--publish 7795:80 \
 		--detach \
-		-e PAWNDEX_BIND=$(PAWNDEX_BIND) \
-		-e PAWNDEX_DOMAIN=$(PAWNDEX_DOMAIN) \
-		-e PAWNDEX_GITHUBTOKEN=$(PAWNDEX_GITHUBTOKEN) \
-		-e PAWNDEX_SEARCHINTERVAL=$(PAWNDEX_SEARCHINTERVAL) \
-		-e DEBUG=$(DEBUG) \
+		--env-file .env \
 		southclaws/pawndex:$(VERSION)
