@@ -25,7 +25,7 @@ func (app *App) runServer() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		_, err := w.Write(contents)
+		_, err = w.Write(contents)
 		if err != nil {
 			logger.Fatal("failed to write",
 				zap.Error(err))
