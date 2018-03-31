@@ -72,7 +72,7 @@ func Start(config Config) {
 // Daemon blocks forever and handles the main event loop and message bus
 func (app *App) Daemon() {
 	search := time.NewTicker(app.config.SearchInterval)
-	scrape := time.NewTicker(time.Second * 2)
+	scrape := time.NewTicker(app.config.ScrapeInterval)
 
 	var err error
 	var scraped *Package

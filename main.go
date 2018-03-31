@@ -48,6 +48,7 @@ type Config struct {
 	Domain         string        `required:"true"` // public domain
 	GithubToken    string        `required:"true"` // GitHub API token
 	SearchInterval time.Duration `required:"true"` // interval between checks
+	ScrapeInterval time.Duration `required:"true"` // interval between scrapes
 }
 
 func main() {
