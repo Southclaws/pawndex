@@ -8,9 +8,20 @@ import (
 	"go.uber.org/zap"
 )
 
-func (app *App) updateList(query string) (err error) {
+func (app *App) updateList(queries []string) {
 	logger.Debug("updating package list")
 
+	for _, query := range queries {
+		err := app.runQuery(query)
+		if err != nil {
+			logger.Error("failed to run query",
+				zap.Error(err))
+			continue
+		}
+	}
+}
+
+func (app *App) runQuery(query string) (err error) {
 	page := 1
 	total := 0
 	for {

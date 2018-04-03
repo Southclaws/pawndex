@@ -59,23 +59,7 @@ func Start(config Config) {
 	logger.Info("starting pawndex and running initial list update",
 		zap.String("version", version))
 
-	err := app.updateList("topic:pawn-package")
-	if err != nil {
-		logger.Error("error encountered while updating",
-			zap.Error(err))
-	}
-
-	err = app.updateList("language:pawn")
-	if err != nil {
-		logger.Error("error encountered while updating",
-			zap.Error(err))
-	}
-
-	err = app.updateList("topic:sa-mp")
-	if err != nil {
-		logger.Error("error encountered while updating",
-			zap.Error(err))
-	}
+	app.updateList([]string{"topic:pawn-package", "language:pawn", "topic:sa-mp"})
 
 	go app.runServer()
 	app.Daemon()
@@ -94,23 +78,7 @@ func (app *App) Daemon() {
 
 		// handles searching GitHub for all Pawn repositories
 		case <-search.C:
-			err = app.updateList("topic:pawn-package")
-			if err != nil {
-				logger.Error("error encountered while updating",
-					zap.Error(err))
-			}
-
-			err = app.updateList("language:pawn")
-			if err != nil {
-				logger.Error("error encountered while updating",
-					zap.Error(err))
-			}
-
-			err = app.updateList("topic:sa-mp")
-			if err != nil {
-				logger.Error("error encountered while updating",
-					zap.Error(err))
-			}
+			app.updateList([]string{"topic:pawn-package", "language:pawn", "topic:sa-mp"})
 
 		// consumes repositories discovered by the search loop and investigates them
 		case <-scrape.C:
