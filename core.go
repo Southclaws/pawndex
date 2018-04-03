@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"sync"
 	"time"
 
@@ -62,7 +63,7 @@ func Start(config Config) {
 		zap.String("version", version))
 
 	err := app.loadCache()
-	if err != nil && err.Error() != "open cache.json: no such file or directory" {
+	if err != nil && !strings.HasSuffix(err.Error(), "no such file or directory") {
 		logger.Fatal("failed to load cache",
 			zap.Error(err))
 	}
