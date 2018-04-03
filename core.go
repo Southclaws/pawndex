@@ -59,7 +59,19 @@ func Start(config Config) {
 	logger.Info("starting pawndex and running initial list update",
 		zap.String("version", version))
 
-	err := app.updateList("language:pawn")
+	err := app.updateList("topic:pawn-package")
+	if err != nil {
+		logger.Error("error encountered while updating",
+			zap.Error(err))
+	}
+
+	err = app.updateList("language:pawn")
+	if err != nil {
+		logger.Error("error encountered while updating",
+			zap.Error(err))
+	}
+
+	err = app.updateList("topic:sa-mp")
 	if err != nil {
 		logger.Error("error encountered while updating",
 			zap.Error(err))
@@ -89,6 +101,12 @@ func (app *App) Daemon() {
 			}
 
 			err = app.updateList("language:pawn")
+			if err != nil {
+				logger.Error("error encountered while updating",
+					zap.Error(err))
+			}
+
+			err = app.updateList("topic:sa-mp")
 			if err != nil {
 				logger.Error("error encountered while updating",
 					zap.Error(err))
