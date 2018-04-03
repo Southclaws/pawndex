@@ -49,6 +49,7 @@ type Config struct {
 	GithubToken    string        `required:"true"` // GitHub API token
 	SearchInterval time.Duration `required:"true"` // interval between checks
 	ScrapeInterval time.Duration `required:"true"` // interval between scrapes
+	Cache          string        `required:"true"` // cache for persistence
 }
 
 func main() {

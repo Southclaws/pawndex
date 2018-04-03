@@ -135,12 +135,12 @@ func (app *App) dumpCache() (err error) {
 	if err != nil {
 		return
 	}
-	err = ioutil.WriteFile("cache.json", payload, 0600)
+	err = ioutil.WriteFile(app.config.Cache, payload, 0600)
 	return
 }
 
 func (app *App) loadCache() (err error) {
-	contents, err := ioutil.ReadFile("cache.json")
+	contents, err := ioutil.ReadFile(app.config.Cache)
 	if err != nil {
 		return
 	}

@@ -34,4 +34,6 @@ run:
 		--publish 7795:80 \
 		--detach \
 		--env-file .env \
+		-e PAWNDEX_CACHE=cache/cache.json \
+		--volume /data/pawndex:/bin/cache \
 		southclaws/pawndex:$(VERSION)
