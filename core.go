@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"sync"
 	"time"
 
@@ -59,6 +61,11 @@ func Start(config Config) {
 	logger.Info("starting pawndex and running initial list update",
 		zap.String("version", version))
 
+	err := app.loadCache()
+	if err != nil && err.Error() != "open cache.json: no such file or directory" {
+		logger.Fatal("failed to load cache",
+			zap.Error(err))
+	}
 	app.updateList([]string{"topic:pawn-package", "language:pawn", "topic:sa-mp"})
 
 	go app.runServer()
@@ -103,6 +110,12 @@ func (app *App) Daemon() {
 
 			logger.Debug("discovered repo",
 				zap.String("meta", str))
+
+			err = app.dumpCache()
+			if err != nil {
+				logger.Error("failed to dump cache",
+					zap.Error(err))
+			}
 		}
 	}
 }
@@ -113,5 +126,33 @@ func (app *App) getPackageList() (result []*Package) {
 		result = append(result, pkg)
 	}
 	app.lock.RUnlock()
+	return
+}
+
+func (app *App) dumpCache() (err error) {
+	list := app.getPackageList()
+	payload, err := json.MarshalIndent(list, "", "  ")
+	if err != nil {
+		return
+	}
+	err = ioutil.WriteFile("cache.json", payload, 0600)
+	return
+}
+
+func (app *App) loadCache() (err error) {
+	contents, err := ioutil.ReadFile("cache.json")
+	if err != nil {
+		return
+	}
+	var list []Package
+	err = json.Unmarshal(contents, &list)
+	if err != nil {
+		return
+	}
+	for _, pkg := range list {
+		str := fmt.Sprint(pkg)
+		logger.Debug("loaded from cache", zap.String("name", str))
+		app.index[str] = &pkg
+	}
 	return
 }
