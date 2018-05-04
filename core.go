@@ -64,7 +64,7 @@ func Start(config Config) {
 
 	err := app.loadCache()
 	if err != nil && !strings.HasSuffix(err.Error(), "no such file or directory") {
-		logger.Fatal("failed to load cache",
+		logger.Error("failed to load cache",
 			zap.Error(err))
 	}
 	app.updateList([]string{"topic:pawn-package", "language:pawn", "topic:sa-mp"})
