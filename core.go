@@ -53,7 +53,7 @@ func Start(config Config) {
 	app := App{
 		config:   config,
 		gh:       github.NewClient(tc),
-		toScrape: make(chan github.Repository, 1000),
+		toScrape: make(chan github.Repository, 2000),
 		toIndex:  make(chan *Package),
 		index:    make(map[string]*Package),
 		lock:     sync.RWMutex{},
