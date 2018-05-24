@@ -123,8 +123,14 @@ func (app *App) Daemon() {
 
 func (app *App) getPackageList() (result []*Package) {
 	app.lock.RLock()
+	visited := make(map[*Package]struct{})
 	for _, pkg := range app.index {
-		result = append(result, pkg)
+		if pkg != nil {
+			if _, ok := visited[pkg]; !ok {
+				result = append(result, pkg)
+				visited[pkg] = struct{}{}
+			}
+		}
 	}
 	app.lock.RUnlock()
 	return
