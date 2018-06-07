@@ -84,6 +84,16 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 		}
 	}
 
+	processedPackage.Topics = repo.Topics
+
+	tags, _, err := app.gh.Repositories.ListTags(ctx, meta.User, meta.Repo, &github.ListOptions{})
+	if err != nil {
+		return errors.Wrap(err, "failed to list repo tags")
+	}
+	for _, tag := range tags {
+		processedPackage.Tags = append(processedPackage.Tags, tag.GetName())
+	}
+
 	if processedPackage != nil {
 		// add some generic info
 		processedPackage.Stars = repo.GetStargazersCount()

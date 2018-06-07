@@ -43,6 +43,8 @@ type Package struct {
 	Classification Classification `json:"classification"` // classification represents how conformative the package is
 	Stars          int            `json:"stars"`          // GitHub stars
 	Updated        time.Time      `json:"updated"`        // last updated
+	Topics         []string       `json:"topics"`         // GitHub topics
+	Tags           []string       `json:"tags"`           // Git tags
 }
 
 // Start initialises the app and blocks until fatal error
