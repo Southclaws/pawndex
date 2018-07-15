@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
@@ -39,6 +40,7 @@ func (app *App) runQuery(query string) (err error) {
 		if err != nil {
 			return errors.Wrap(err, "failed to search repositories")
 		}
+		app.metrics.SearchRate.Mark(1)
 
 		for _, repo := range results.Repositories {
 			app.toScrape <- repo
@@ -49,10 +51,13 @@ func (app *App) runQuery(query string) (err error) {
 			break
 		}
 
+		time.Sleep(app.config.ScrapeInterval)
+
 		page++
 	}
 
 	logger.Debug("done updating package list",
+		zap.String("query", query),
 		zap.Int("packages", total))
 
 	return

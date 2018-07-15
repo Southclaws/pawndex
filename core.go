@@ -22,9 +22,10 @@ type App struct {
 	config   Config
 	gh       *github.Client
 	toScrape chan github.Repository
-	toIndex  chan *Package
-	index    map[string]*Package
+	toIndex  chan Package
+	index    map[string]Package
 	lock     sync.RWMutex
+	metrics  *Metrics
 }
 
 // Classification represents how compatible or easy to use a package is. If a package contains a
@@ -56,9 +57,10 @@ func Start(config Config) {
 		config:   config,
 		gh:       github.NewClient(tc),
 		toScrape: make(chan github.Repository, 2000),
-		toIndex:  make(chan *Package),
-		index:    make(map[string]*Package),
+		toIndex:  make(chan Package),
+		index:    make(map[string]Package),
 		lock:     sync.RWMutex{},
+		metrics:  newMetrics(),
 	}
 
 	logger.Info("starting pawndex and running initial list update",
@@ -69,9 +71,10 @@ func Start(config Config) {
 		logger.Error("failed to load cache",
 			zap.Error(err))
 	}
-	app.updateList([]string{"topic:pawn-package", "language:pawn", "topic:sa-mp"})
+	app.metrics.IndexSize.Update(int64(len(app.index)))
 
 	go app.runServer()
+	app.updateList([]string{"topic:pawn-package", "language:pawn", "topic:sa-mp"})
 	app.Daemon()
 }
 
@@ -79,9 +82,6 @@ func Start(config Config) {
 func (app *App) Daemon() {
 	search := time.NewTicker(app.config.SearchInterval)
 	scrape := time.NewTicker(app.config.ScrapeInterval)
-
-	var err error
-	var scraped *Package
 
 	for {
 		select {
@@ -95,26 +95,32 @@ func (app *App) Daemon() {
 			go func() {
 				searched := <-app.toScrape
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-				err = app.scrapeRepo(ctx, searched)
+				err := app.scrapeRepo(ctx, searched)
 				if err != nil {
 					logger.Error("failed to scrape repository",
 						zap.Error(err))
 				}
+				app.metrics.ScrapeRate.Mark(1)
+				app.metrics.ScrapeQueue.Update(int64(len(app.toScrape)))
 				cancel()
 			}()
 
-		// toIndex consumes repositories that have been confirmed Pawn repos bu scrapeRepo
-		case scraped = <-app.toIndex:
+		// toIndex consumes repositories that have been confirmed Pawn repos
+		case scraped := <-app.toIndex:
 			str := fmt.Sprint(scraped)
 
 			app.lock.Lock()
 			app.index[str] = scraped
 			app.lock.Unlock()
 
+			app.metrics.IndexRate.Mark(1)
+			app.metrics.IndexSize.Update(int64(len(app.index)))
+			app.metrics.IndexQueue.Update(int64(len(app.toIndex)))
+
 			logger.Debug("discovered repo",
 				zap.String("meta", str))
 
-			err = app.dumpCache()
+			err := app.dumpCache()
 			if err != nil {
 				logger.Error("failed to dump cache",
 					zap.Error(err))
@@ -123,15 +129,13 @@ func (app *App) Daemon() {
 	}
 }
 
-func (app *App) getPackageList() (result []*Package) {
+func (app *App) getPackageList() (result []Package) {
 	app.lock.RLock()
-	visited := make(map[*Package]struct{})
-	for _, pkg := range app.index {
-		if pkg != nil {
-			if _, ok := visited[pkg]; !ok {
-				result = append(result, pkg)
-				visited[pkg] = struct{}{}
-			}
+	visited := make(map[string]struct{})
+	for key, pkg := range app.index {
+		if _, ok := visited[key]; !ok {
+			result = append(result, pkg)
+			visited[key] = struct{}{}
 		}
 	}
 	app.lock.RUnlock()
@@ -158,10 +162,13 @@ func (app *App) loadCache() (err error) {
 	if err != nil {
 		return
 	}
-	for _, pkg := range list {
+
+	for i := range list {
+		pkg := list[i]
 		str := fmt.Sprint(pkg)
 		logger.Debug("loaded from cache", zap.String("name", str))
-		app.index[str] = &pkg
+		app.index[str] = pkg
 	}
+	logger.Debug("loaded cache", zap.Int("size", len(app.index)))
 	return
 }

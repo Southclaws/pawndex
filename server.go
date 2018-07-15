@@ -10,14 +10,9 @@ import (
 )
 
 func (app *App) runServer() {
-	var (
-		err      error
-		contents []byte
-	)
-
 	router := mux.NewRouter()
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		contents, err = json.Marshal(app.getPackageList())
+		contents, err := json.Marshal(app.getPackageList())
 		if err != nil {
 			logger.Error("failed to encode package list",
 				zap.Error(err))
@@ -31,11 +26,18 @@ func (app *App) runServer() {
 				zap.Error(err))
 		}
 	})
+	router.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(app.metrics); err != nil {
+			logger.Error("failed to encode metrics", zap.Error(err))
+			w.WriteHeader(500)
+		}
+	})
 
 	logger.Info("listening for http requests",
 		zap.String("bind", app.config.Bind))
 
-	err = http.ListenAndServe(app.config.Bind, handlers.CORS(
+	err := http.ListenAndServe(app.config.Bind, handlers.CORS(
 		handlers.AllowedHeaders([]string{"Cache-Control", "X-File-Name", "X-Requested-With", "X-File-Name", "Content-Type", "Authorization", "Set-Cookie", "Cookie"}),
 		handlers.AllowedOrigins([]string{"*"}),
 		handlers.AllowedMethods([]string{"OPTIONS", "GET", "HEAD", "POST", "PUT"}),

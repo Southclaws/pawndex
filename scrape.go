@@ -98,7 +98,7 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 			processedPackage.Tags = append(processedPackage.Tags, tag.GetName())
 		}
 
-		app.toIndex <- processedPackage
+		app.toIndex <- *processedPackage
 	}
 
 	return

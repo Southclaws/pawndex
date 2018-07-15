@@ -75,6 +75,12 @@
   version = "v0.8.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/rcrowley/go-metrics"
+  packages = ["."]
+  revision = "e2704e165165ec55d062f5919b4b29494e9fa790"
+
+[[projects]]
   name = "go.uber.org/atomic"
   packages = ["."]
   revision = "8474b86a5a6f79c443ce4b2992817ff32cf208b8"
@@ -140,6 +146,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "08b2f4f46431ee5eb1bb9772c2944cbf2e276fe3461ffc008879ff11cf72d459"
+  inputs-digest = "d53df281d47b3a642fac201c005d0055e539c2a2fb02b227d58e9bcb725fb4d1"
   solver-name = "gps-cdcl"
   solver-version = 1
