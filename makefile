@@ -1,39 +1,19 @@
-VERSION := $(shell cat VERSION)
+VERSION := $(shell git tag --always --dirty --tags)
 LDFLAGS := -ldflags "-X main.version=$(VERSION)"
 -include .env
 
 
-fast:
-	go build $(LDFLAGS) -o pawndex
-
 static:
 	CGO_ENABLED=0 GOOS=linux go build -a $(LDFLAGS) -o pawndex .
 
-version:
-	git tag $(VERSION)
-	git push
-	git push origin $(VERSION)
+fast:
+	go build $(LDFLAGS) -o pawndex
 
 test: fast
 	./pawndex
 
-
-# Docker
-
 build:
-	docker build --no-cache -t southclaws/pawndex:$(VERSION) .
+	docker build -t southclaws/pawndex:$(VERSION) .
 
 push:
 	docker push southclaws/pawndex:$(VERSION)
-	
-run:
-	-docker kill pawndex
-	-docker rm pawndex
-	docker run \
-		--name pawndex \
-		--publish 7795:80 \
-		--detach \
-		--env-file .env \
-		-e PAWNDEX_CACHE=/cache/cache.json \
-		--volume /data/pawndex:/cache \
-		southclaws/pawndex:$(VERSION)
