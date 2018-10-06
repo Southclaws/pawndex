@@ -9,7 +9,7 @@ static:
 fast:
 	go build $(LDFLAGS) -o pawndex
 
-test: fast
+local: fast
 	./pawndex
 
 build:

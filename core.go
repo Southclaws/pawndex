@@ -33,6 +33,7 @@ type App struct {
 type Classification string
 
 var (
+	classificationInvalid     Classification = "invalid"
 	classificationPawnPackage Classification = "full"
 	classificationBarebones   Classification = "basic"
 	classificationBuried      Classification = "buried"
@@ -95,6 +96,7 @@ func (app *App) Daemon() {
 			go func() {
 				searched := <-app.toScrape
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+				defer cancel()
 				err := app.scrapeRepo(ctx, searched)
 				if err != nil {
 					logger.Error("failed to scrape repository",
@@ -102,7 +104,6 @@ func (app *App) Daemon() {
 				}
 				app.metrics.ScrapeRate.Mark(1)
 				app.metrics.ScrapeQueue.Update(int64(len(app.toScrape)))
-				cancel()
 			}()
 
 		// toIndex consumes repositories that have been confirmed Pawn repos

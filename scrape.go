@@ -9,7 +9,6 @@ import (
 	"github.com/Southclaws/sampctl/versioning"
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
 )
 
 // scrapeRepo is responsible for taking a repo and checking its contents for the qualifying
@@ -26,79 +25,76 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 		return errors.New("repository details empty")
 	}
 
-	var processedPackage *Package // the result - a package with some additional metadata
+	var processedPackage Package // the result - a package with some additional metadata
 
 	pkg, err := types.GetRemotePackage(ctx, app.gh, meta)
 	if err != nil {
-		var ref *github.Reference
-
-		ref, _, err = app.gh.Git.GetRef(ctx, meta.User, meta.Repo, "heads/"+repo.GetDefaultBranch())
+		processedPackage, err = app.findPawnSource(ctx, repo, meta)
 		if err != nil {
-			return errors.Wrap(err, "failed to get HEAD ref from default branch")
+			return
 		}
-
-		sha := ref.GetObject().GetSHA()
-
-		var tree *github.Tree
-		tree, _, err = app.gh.Git.GetTree(ctx, meta.User, meta.Repo, sha, true)
-		if err != nil {
-			return errors.Wrap(err, "failed to get git tree")
-		}
-
-		pawnAtRoot := false // contains pawn files at root level (/)
-		pawnAtAny := false  // contains pawn files anywhere
-		for _, file := range tree.Entries {
-			ext := filepath.Ext(file.GetPath())
-			if ext == ".inc" || ext == ".pwn" {
-				if filepath.Dir(file.GetPath()) == "." {
-					pawnAtRoot = true
-				} else {
-					pawnAtAny = true
-				}
-			}
-		}
-
-		if pawnAtRoot {
-			processedPackage = &Package{
-				Package:        types.Package{DependencyMeta: meta},
-				Classification: classificationBarebones,
-			}
-		} else if pawnAtAny {
-			processedPackage = &Package{
-				Package:        types.Package{DependencyMeta: meta},
-				Classification: classificationBuried,
-			}
-		} else {
-			logger.Debug("package does not contain pawn source",
-				zap.String("meta", fmt.Sprint(meta)))
-		}
+		err = nil
 	} else {
 		pkg.User = repo.GetOwner().GetLogin()
 		pkg.Repo = repo.GetName()
 
 		repo.GetStargazersCount()
 
-		processedPackage = &Package{
+		processedPackage = Package{
 			Package:        pkg,
 			Classification: classificationPawnPackage,
 		}
 	}
 
-	if processedPackage != nil {
-		// add some generic info
-		processedPackage.Stars = repo.GetStargazersCount()
-		processedPackage.Updated = repo.GetUpdatedAt().Time
-		processedPackage.Topics = repo.Topics
+	if processedPackage.Classification == classificationInvalid {
+		return nil
+	}
 
-		tags, _, err := app.gh.Repositories.ListTags(ctx, meta.User, meta.Repo, &github.ListOptions{})
-		if err != nil {
-			return errors.Wrap(err, "failed to list repo tags")
-		}
-		for _, tag := range tags {
-			processedPackage.Tags = append(processedPackage.Tags, tag.GetName())
-		}
+	// add some generic info
+	processedPackage.Stars = repo.GetStargazersCount()
+	processedPackage.Updated = repo.GetUpdatedAt().Time
+	processedPackage.Topics = repo.Topics
 
-		app.toIndex <- *processedPackage
+	tags, _, err := app.gh.Repositories.ListTags(ctx, meta.User, meta.Repo, nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to list repo tags")
+	}
+	for _, tag := range tags {
+		processedPackage.Tags = append(processedPackage.Tags, tag.GetName())
+	}
+
+	app.toIndex <- processedPackage
+
+	return
+}
+
+func (app *App) findPawnSource(ctx context.Context, repo github.Repository, meta versioning.DependencyMeta) (pkg Package, err error) {
+	ref, _, err := app.gh.Git.GetRef(ctx, meta.User, meta.Repo, fmt.Sprintf("heads/%s", repo.GetDefaultBranch()))
+	if err != nil {
+		err = errors.Wrap(err, "failed to get HEAD ref from default branch")
+		return
+	}
+
+	sha := ref.GetObject().GetSHA()
+	tree, _, err := app.gh.Git.GetTree(ctx, meta.User, meta.Repo, sha, true)
+	if err != nil {
+		err = errors.Wrap(err, "failed to get git tree")
+		return
+	}
+
+	pkg = Package{Package: types.Package{DependencyMeta: meta}}
+
+	for _, file := range tree.Entries {
+		ext := filepath.Ext(file.GetPath())
+		if ext == ".inc" || ext == ".pwn" {
+			if filepath.Dir(file.GetPath()) == "." {
+				pkg.Classification = classificationBarebones
+				break
+			} else {
+				pkg.Classification = classificationBuried
+				// no break, keep searching
+			}
+		}
 	}
 
 	return
