@@ -26,7 +26,7 @@ type App struct {
 	toIndex  chan Package
 	index    map[string]Package
 	lock     sync.RWMutex
-	metrics  *Metrics
+	metrics  Metrics
 }
 
 // Classification represents how compatible or easy to use a package is. If a package contains a
@@ -73,7 +73,7 @@ func Start(config Config) {
 		logger.Error("failed to load cache",
 			zap.Error(err))
 	}
-	app.metrics.IndexSize.Update(int64(len(app.index)))
+	app.metrics.IndexSize.Set(float64(len(app.index)))
 
 	go app.runServer()
 	app.updateList([]string{"topic:pawn-package", "language:pawn", "topic:sa-mp"})
@@ -104,7 +104,6 @@ func (app *App) Daemon() {
 			}
 
 			go func() {
-				t := time.Now()
 				searched := <-app.toScrape
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 				defer cancel()
@@ -113,8 +112,8 @@ func (app *App) Daemon() {
 					logger.Error("failed to scrape repository",
 						zap.Error(err))
 				}
-				app.metrics.ScrapeRate.Mark(1)
-				app.metrics.ScrapeQueue.Update(int64(len(app.toScrape)))
+				app.metrics.ScrapeRate.Observe(1)
+				app.metrics.ScrapeQueue.Set(float64(len(app.toScrape)))
 			}()
 
 		// toIndex consumes repositories that have been confirmed Pawn repos
@@ -125,9 +124,9 @@ func (app *App) Daemon() {
 			app.index[str] = scraped
 			app.lock.Unlock()
 
-			app.metrics.IndexRate.Mark(1)
-			app.metrics.IndexSize.Update(int64(len(app.index)))
-			app.metrics.IndexQueue.Update(int64(len(app.toIndex)))
+			app.metrics.IndexRate.Observe(1)
+			app.metrics.IndexSize.Set(float64(len(app.index)))
+			app.metrics.IndexQueue.Set(float64(len(app.toIndex)))
 
 			logger.Debug("discovered repo",
 				zap.String("meta", str))

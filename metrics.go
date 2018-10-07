@@ -1,53 +1,66 @@
 package main
 
 import (
-	"encoding/json"
-
-	"github.com/rcrowley/go-metrics"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Metrics stores a set of metrics recorders for monitoring
 type Metrics struct {
-	SearchRate  metrics.Meter
-	ScrapeRate  metrics.Meter
-	IndexRate   metrics.Meter
-	ScrapeQueue metrics.Gauge
-	IndexQueue  metrics.Gauge
-	IndexSize   metrics.Gauge
+	SearchRate  prometheus.Histogram
+	ScrapeRate  prometheus.Histogram
+	IndexRate   prometheus.Histogram
+	ScrapeQueue prometheus.Gauge
+	IndexQueue  prometheus.Gauge
+	IndexSize   prometheus.Gauge
 }
 
-func newMetrics() *Metrics {
-	return &Metrics{
-		SearchRate:  metrics.NewMeter(),
-		ScrapeRate:  metrics.NewMeter(),
-		IndexRate:   metrics.NewMeter(),
-		ScrapeQueue: metrics.NewGauge(),
-		IndexQueue:  metrics.NewGauge(),
-		IndexSize:   metrics.NewGauge(),
+//nolint:lll
+func newMetrics() (metrics Metrics) {
+	metrics = Metrics{
+		SearchRate: prometheus.NewHistogram(prometheus.HistogramOpts{
+			Namespace: "pawndex",
+			Subsystem: "searcher",
+			Name:      "search_rate",
+			Help:      "GitHub search queries",
+		}),
+		ScrapeRate: prometheus.NewHistogram(prometheus.HistogramOpts{
+			Namespace: "pawndex",
+			Subsystem: "scraper",
+			Name:      "scrape_rate",
+			Help:      "GitHub repository API accesses",
+		}),
+		IndexRate: prometheus.NewHistogram(prometheus.HistogramOpts{
+			Namespace: "pawndex",
+			Subsystem: "indexer",
+			Name:      "index_rate",
+			Help:      "Pawndex index insertions",
+		}),
+		ScrapeQueue: prometheus.NewGauge(prometheus.GaugeOpts{
+			Namespace: "pawndex",
+			Subsystem: "scraper",
+			Name:      "scrape_queue_size",
+			Help:      "Size of the to-scrape queue",
+		}),
+		IndexQueue: prometheus.NewGauge(prometheus.GaugeOpts{
+			Namespace: "pawndex",
+			Subsystem: "indexer",
+			Name:      "index_queue_size",
+			Help:      "Size of the to-index queue",
+		}),
+		IndexSize: prometheus.NewGauge(prometheus.GaugeOpts{
+			Namespace: "pawndex",
+			Subsystem: "indexer",
+			Name:      "index_size",
+			Help:      "Overal package index size",
+		}),
 	}
-}
-
-// MarshalJSON implements the JSON Unmarshaller interface
-func (m Metrics) MarshalJSON() ([]byte, error) {
-	object := struct {
-		SearchRate  float64 `json:"searchRate"`
-		ScrapeRate  float64 `json:"scrapeRate"`
-		IndexRate   float64 `json:"indexRate"`
-		ScrapeQueue int64   `json:"scrapeQueue"`
-		IndexQueue  int64   `json:"indexQueue"`
-		IndexSize   int64   `json:"indexSize"`
-	}{
-		SearchRate:  m.SearchRate.Rate1(),
-		ScrapeRate:  m.ScrapeRate.Rate1(),
-		IndexRate:   m.IndexRate.Rate1(),
-		ScrapeQueue: m.ScrapeQueue.Value(),
-		IndexQueue:  m.IndexQueue.Value(),
-		IndexSize:   m.IndexSize.Value(),
-	}
-	return json.Marshal(object)
-}
-
-// UnmarshalJSON is empty because the app never needs to unmarshal metrics
-func (m *Metrics) UnmarshalJSON(b []byte) error {
-	return nil
+	prometheus.MustRegister(
+		metrics.SearchRate,
+		metrics.ScrapeRate,
+		metrics.IndexRate,
+		metrics.ScrapeQueue,
+		metrics.IndexQueue,
+		metrics.IndexSize,
+	)
+	return
 }

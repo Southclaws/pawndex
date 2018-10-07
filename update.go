@@ -40,7 +40,7 @@ func (app *App) runQuery(query string) (err error) {
 		if err != nil {
 			return errors.Wrap(err, "failed to search repositories")
 		}
-		app.metrics.SearchRate.Mark(1)
+		app.metrics.SearchRate.Observe(1)
 
 		for _, repo := range results.Repositories {
 			app.toScrape <- repo
