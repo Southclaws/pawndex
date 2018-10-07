@@ -26,7 +26,6 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 	}
 
 	var processedPackage Package // the result - a package with some additional metadata
-
 	pkg, err := types.GetRemotePackage(ctx, app.gh, meta)
 	if err != nil {
 		processedPackage, err = app.findPawnSource(ctx, repo, meta)
@@ -35,10 +34,8 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 		}
 		err = nil
 	} else {
-		pkg.User = repo.GetOwner().GetLogin()
-		pkg.Repo = repo.GetName()
-
-		repo.GetStargazersCount()
+		pkg.User = meta.User
+		pkg.Repo = meta.Repo
 
 		processedPackage = Package{
 			Package:        pkg,

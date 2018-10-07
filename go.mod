@@ -1,29 +1,40 @@
 module github.com/Southclaws/pawndex
 
 require (
-	github.com/Masterminds/semver v1.4.0 // indirect
-	github.com/Southclaws/sampctl v0.0.0-20180120160911-c7ae3b837bfb
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/golang/protobuf v0.0.0-20171113180720-1e59b77b52bf // indirect
-	github.com/google/go-github v0.0.0-20180116225909-922ceac0585d
-	github.com/google/go-querystring v0.0.0-20170111101155-53e6ce116135 // indirect
-	github.com/gorilla/context v0.0.0-20160226214623-1ea25387ff6f // indirect
-	github.com/gorilla/handlers v1.3.0
-	github.com/gorilla/mux v1.6.1
-	github.com/joho/godotenv v1.2.0
+	github.com/Southclaws/configor v1.0.0 // indirect
+	github.com/Southclaws/sampctl v0.0.0-20181007130104-4e02b9a87292
+	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
+	github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973 // indirect
+	github.com/emirpasic/gods v1.12.0 // indirect
+	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
+	github.com/gliderlabs/ssh v0.1.1 // indirect
+	github.com/google/go-cmp v0.2.0 // indirect
+	github.com/google/go-github v17.0.0+incompatible
+	github.com/google/go-querystring v1.0.0 // indirect
+	github.com/google/uuid v1.0.0 // indirect
+	github.com/gorilla/context v1.1.1 // indirect
+	github.com/gorilla/handlers v1.4.0
+	github.com/gorilla/mux v1.6.2
+	github.com/joho/godotenv v1.3.0
 	github.com/kelseyhightower/envconfig v1.3.0
-	github.com/kr/pretty v0.1.0 // indirect
+	github.com/kevinburke/ssh_config v0.0.0-20180830205328-81db2a75821e // indirect
+	github.com/mattn/go-isatty v0.0.4 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/mitchellh/go-homedir v1.0.0 // indirect
+	github.com/pelletier/go-buffruneio v0.2.0 // indirect
 	github.com/pkg/errors v0.8.0
-	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/prometheus/client_golang v0.8.0
+	github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910 // indirect
+	github.com/prometheus/common v0.0.0-20180801064454-c7de2306084e // indirect
+	github.com/prometheus/procfs v0.0.0-20181005140218-185b4288413d // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20180503174638-e2704e165165
-	github.com/stretchr/testify v1.2.2 // indirect
-	go.uber.org/atomic v1.3.1 // indirect
+	go.uber.org/atomic v1.3.2 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
-	go.uber.org/zap v1.7.1
-	golang.org/x/net v0.0.0-20180112015858-5ccada7d0a7b // indirect
-	golang.org/x/oauth2 v0.0.0-20180118004544-b28fcf2b08a1
-	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f // indirect
-	google.golang.org/appengine v1.0.0 // indirect
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
-	gopkg.in/yaml.v2 v2.0.0 // indirect
+	go.uber.org/zap v1.9.1
+	golang.org/x/crypto v0.0.0-20181001203147-e3636079e1a4 // indirect
+	golang.org/x/net v0.0.0-20181005035420-146acd28ed58 // indirect
+	golang.org/x/oauth2 v0.0.0-20181003184128-c57b0facaced
+	google.golang.org/appengine v1.2.0 // indirect
+	gopkg.in/src-d/go-git-fixtures.v3 v3.1.1 // indirect
+	gopkg.in/src-d/go-git.v4 v4.7.0 // indirect
 )

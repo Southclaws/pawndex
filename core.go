@@ -11,6 +11,7 @@ import (
 
 	"github.com/Southclaws/sampctl/types"
 	"github.com/google/go-github/github"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 )
@@ -58,7 +59,7 @@ func Start(config Config) {
 		config:   config,
 		gh:       github.NewClient(tc),
 		toScrape: make(chan github.Repository, 2000),
-		toIndex:  make(chan Package),
+		toIndex:  make(chan Package, 2000),
 		index:    make(map[string]Package),
 		lock:     sync.RWMutex{},
 		metrics:  newMetrics(),
@@ -84,16 +85,26 @@ func (app *App) Daemon() {
 	search := time.NewTicker(app.config.SearchInterval)
 	scrape := time.NewTicker(app.config.ScrapeInterval)
 
-	for {
+	f := func() (err error) {
 		select {
 
 		// handles searching GitHub for all Pawn repositories
 		case <-search.C:
+			if len(app.toScrape) > 0 {
+				logger.Warn("cannot search with items still to scrape, raise search interval",
+					zap.Int("toScrape", len(app.toScrape)))
+				return
+			}
 			app.updateList([]string{"topic:pawn-package", "language:pawn", "topic:sa-mp"})
 
 		// consumes repositories discovered by the search loop and investigates them
 		case <-scrape.C:
+			if len(app.toScrape) == 0 {
+				return
+			}
+
 			go func() {
+				t := time.Now()
 				searched := <-app.toScrape
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 				defer cancel()
@@ -123,9 +134,16 @@ func (app *App) Daemon() {
 
 			err := app.dumpCache()
 			if err != nil {
-				logger.Error("failed to dump cache",
-					zap.Error(err))
+				return errors.Wrap(err, "failed to dump cache")
 			}
+		}
+		return
+	}
+
+	for {
+		err := f()
+		if err != nil {
+			logger.Error("daemon error", zap.Error(err))
 		}
 	}
 }
