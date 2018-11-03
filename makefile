@@ -26,7 +26,7 @@ version:
 
 # -
 # Docker
-#-
+# -
 
 build:
 	docker build --no-cache -t $(OWNER)/$(SERVICE):$(VERSION) .
@@ -35,4 +35,3 @@ push:
 	docker push $(OWNER)/$(SERVICE):$(VERSION)
 	docker tag $(OWNER)/$(SERVICE):$(VERSION) $(OWNER)/$(SERVICE):latest
 	docker push $(OWNER)/$(SERVICE):latest
-
