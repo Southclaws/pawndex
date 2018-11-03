@@ -149,6 +149,8 @@ func (app *App) Daemon() {
 
 func (app *App) getPackageList() (result []Package) {
 	app.lock.RLock()
+	defer app.lock.RUnlock()
+
 	visited := make(map[string]struct{})
 	for key, pkg := range app.index {
 		if _, ok := visited[key]; !ok {
@@ -156,7 +158,14 @@ func (app *App) getPackageList() (result []Package) {
 			visited[key] = struct{}{}
 		}
 	}
-	app.lock.RUnlock()
+	return
+}
+
+func (app *App) getPackage(user, repo string) (result Package, exists bool) {
+	app.lock.RLock()
+	defer app.lock.RUnlock()
+
+	result, exists = app.index[fmt.Sprintf("%s/%s", user, repo)]
 	return
 }
 

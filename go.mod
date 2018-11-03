@@ -1,6 +1,7 @@
 module github.com/Southclaws/pawndex
 
 require (
+	github.com/Masterminds/semver v1.4.2
 	github.com/Southclaws/configor v1.0.0 // indirect
 	github.com/Southclaws/sampctl v0.0.0-20181007130104-4e02b9a87292
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect

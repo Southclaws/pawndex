@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/Masterminds/semver"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -26,6 +27,44 @@ func (app *App) runServer() {
 			logger.Fatal("failed to write",
 				zap.Error(err))
 		}
+	})
+	router.HandleFunc("/package/{user}/{repo}", func(w http.ResponseWriter, r *http.Request) {
+		p, exists := app.getPackage(mux.Vars(r)["user"], mux.Vars(r)["repo"])
+		if !exists {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(p)
+		if err != nil {
+			logger.Fatal("failed to write",
+				zap.Error(err))
+		}
+	})
+	router.HandleFunc("/package/{user}/{repo}/latest", func(w http.ResponseWriter, r *http.Request) {
+		p, exists := app.getPackage(mux.Vars(r)["user"], mux.Vars(r)["repo"])
+		if !exists {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		if len(p.Tags) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		latest, err := semver.NewVersion(p.Tags[0])
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Write([]byte{
+			byte(latest.Major()),
+			byte(latest.Minor()),
+			byte(latest.Patch()),
+		})
 	})
 	router.Handle("/metrics", promhttp.Handler())
 
