@@ -1,33 +1,16 @@
-package main
+package service
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"strings"
-	"sync"
 	"time"
 
 	"github.com/Southclaws/sampctl/types"
-	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"golang.org/x/oauth2"
 )
-
-var version string
-
-// App stores the app state
-type App struct {
-	config   Config
-	gh       *github.Client
-	toScrape chan github.Repository
-	toIndex  chan Package
-	index    map[string]Package
-	lock     sync.RWMutex
-	metrics  Metrics
-}
 
 // Classification represents how compatible or easy to use a package is. If a package contains a
 // package definition file, it's of a higher classification than one that does not contain one.
@@ -50,36 +33,6 @@ type Package struct {
 	Tags           []string       `json:"tags"`           // Git tags
 }
 
-// Start initialises the app and blocks until fatal error
-func Start(config Config) {
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: config.GithubToken})
-	tc := oauth2.NewClient(context.Background(), ts)
-
-	app := App{
-		config:   config,
-		gh:       github.NewClient(tc),
-		toScrape: make(chan github.Repository, 2000),
-		toIndex:  make(chan Package, 2000),
-		index:    make(map[string]Package),
-		lock:     sync.RWMutex{},
-		metrics:  newMetrics(),
-	}
-
-	logger.Info("starting pawndex and running initial list update",
-		zap.String("version", version))
-
-	err := app.loadCache()
-	if err != nil && !strings.HasSuffix(err.Error(), "no such file or directory") {
-		logger.Error("failed to load cache",
-			zap.Error(err))
-	}
-	app.metrics.IndexSize.Set(float64(len(app.index)))
-
-	go app.runServer()
-	app.updateList([]string{"topic:pawn-package", "language:pawn", "topic:sa-mp"})
-	app.Daemon()
-}
-
 // Daemon blocks forever and handles the main event loop and message bus
 func (app *App) Daemon() {
 	search := time.NewTicker(app.config.SearchInterval)
@@ -91,7 +44,7 @@ func (app *App) Daemon() {
 		// handles searching GitHub for all Pawn repositories
 		case <-search.C:
 			if len(app.toScrape) > 0 {
-				logger.Warn("cannot search with items still to scrape, raise search interval",
+				zap.L().Warn("cannot search with items still to scrape, raise search interval",
 					zap.Int("toScrape", len(app.toScrape)))
 				return
 			}
@@ -109,7 +62,7 @@ func (app *App) Daemon() {
 				defer cancel()
 				err := app.scrapeRepo(ctx, searched)
 				if err != nil {
-					logger.Error("failed to scrape repository",
+					zap.L().Error("failed to scrape repository",
 						zap.Error(err))
 				}
 				app.metrics.ScrapeRate.Observe(1)
@@ -128,7 +81,7 @@ func (app *App) Daemon() {
 			app.metrics.IndexSize.Set(float64(len(app.index)))
 			app.metrics.IndexQueue.Set(float64(len(app.toIndex)))
 
-			logger.Debug("discovered repo",
+			zap.L().Debug("discovered repo",
 				zap.String("meta", str))
 
 			err := app.dumpCache()
@@ -142,7 +95,7 @@ func (app *App) Daemon() {
 	for {
 		err := f()
 		if err != nil {
-			logger.Error("daemon error", zap.Error(err))
+			zap.L().Error("daemon error", zap.Error(err))
 		}
 	}
 }
@@ -193,9 +146,9 @@ func (app *App) loadCache() (err error) {
 	for i := range list {
 		pkg := list[i]
 		str := fmt.Sprint(pkg)
-		logger.Debug("loaded from cache", zap.String("name", str))
+		zap.L().Debug("loaded from cache", zap.String("name", str))
 		app.index[str] = pkg
 	}
-	logger.Debug("loaded cache", zap.Int("size", len(app.index)))
+	zap.L().Debug("loaded cache", zap.Int("size", len(app.index)))
 	return
 }

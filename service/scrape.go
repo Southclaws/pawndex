@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"context"
@@ -34,9 +34,6 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 		}
 		err = nil
 	} else {
-		pkg.User = meta.User
-		pkg.Repo = meta.Repo
-
 		processedPackage = Package{
 			Package:        pkg,
 			Classification: classificationPawnPackage,

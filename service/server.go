@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"encoding/json"
@@ -16,7 +16,7 @@ func (app *App) runServer() {
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		contents, err := json.Marshal(app.getPackageList())
 		if err != nil {
-			logger.Error("failed to encode package list",
+			zap.L().Error("failed to encode package list",
 				zap.Error(err))
 			return
 		}
@@ -24,7 +24,7 @@ func (app *App) runServer() {
 		w.Header().Set("Content-Type", "application/json")
 		_, err = w.Write(contents)
 		if err != nil {
-			logger.Fatal("failed to write",
+			zap.L().Fatal("failed to write",
 				zap.Error(err))
 		}
 	})
@@ -38,7 +38,7 @@ func (app *App) runServer() {
 		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(p)
 		if err != nil {
-			logger.Fatal("failed to write",
+			zap.L().Fatal("failed to write",
 				zap.Error(err))
 		}
 	})
@@ -68,7 +68,7 @@ func (app *App) runServer() {
 	})
 	router.Handle("/metrics", promhttp.Handler())
 
-	logger.Info("listening for http requests",
+	zap.L().Info("listening for http requests",
 		zap.String("bind", app.config.Bind))
 
 	err := http.ListenAndServe(app.config.Bind, handlers.CORS(
@@ -79,7 +79,7 @@ func (app *App) runServer() {
 	)(router))
 
 	if err != nil {
-		logger.Fatal("serve failed",
+		zap.L().Fatal("serve failed",
 			zap.Error(err))
 	}
 }

@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"context"
@@ -10,12 +10,12 @@ import (
 )
 
 func (app *App) updateList(queries []string) {
-	logger.Debug("updating package list")
+	zap.L().Debug("updating package list")
 
 	for _, query := range queries {
 		err := app.runQuery(query)
 		if err != nil {
-			logger.Error("failed to run query",
+			zap.L().Error("failed to run query",
 				zap.Error(err))
 			continue
 		}
@@ -26,7 +26,7 @@ func (app *App) runQuery(query string) (err error) {
 	page := 1
 	total := 0
 	for {
-		logger.Debug("querying api for repositories",
+		zap.L().Debug("querying api for repositories",
 			zap.Int("page", page),
 			zap.Int("total", total))
 
@@ -56,7 +56,7 @@ func (app *App) runQuery(query string) (err error) {
 		page++
 	}
 
-	logger.Debug("done updating package list",
+	zap.L().Debug("done updating package list",
 		zap.String("query", query),
 		zap.Int("packages", total))
 
