@@ -18,6 +18,9 @@ fast:
 local: fast
 	./$(SERVICE)
 
+test:
+	go test -v -race ./...
+
 version:
 	git tag $(VERSION)
 	git push
