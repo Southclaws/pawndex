@@ -37,4 +37,5 @@ require (
 	google.golang.org/appengine v1.2.0 // indirect
 	gopkg.in/src-d/go-git-fixtures.v3 v3.1.1 // indirect
 	gopkg.in/src-d/go-git.v4 v4.7.0 // indirect
+	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
 )

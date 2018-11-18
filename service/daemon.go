@@ -82,7 +82,9 @@ func (app *App) Daemon() {
 			app.metrics.IndexQueue.Set(float64(len(app.toIndex)))
 
 			zap.L().Debug("discovered repo",
-				zap.String("meta", str))
+				zap.String("user", scraped.User),
+				zap.String("repo", scraped.Repo),
+				zap.String("classification", string(scraped.Classification)))
 
 			err := app.dumpCache()
 			if err != nil {

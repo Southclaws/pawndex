@@ -2,13 +2,18 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"path/filepath"
 
 	"github.com/Southclaws/sampctl/types"
 	"github.com/Southclaws/sampctl/versioning"
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
+	"gopkg.in/yaml.v1"
 )
 
 // scrapeRepo is responsible for taking a repo and checking its contents for the qualifying
@@ -26,7 +31,7 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 	}
 
 	var processedPackage Package // the result - a package with some additional metadata
-	pkg, err := types.GetRemotePackage(ctx, app.gh, meta)
+	pkg, err := packageFromRepo(repo, meta)
 	if err != nil {
 		processedPackage, err = app.findPawnSource(ctx, repo, meta)
 		if err != nil {
@@ -38,6 +43,10 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 			Package:        pkg,
 			Classification: classificationPawnPackage,
 		}
+	}
+
+	if processedPackage.User == "" || processedPackage.Repo == "" {
+		return errors.Errorf("processed %s package details empty for %s/%s", processedPackage.Classification, meta.User, meta.Repo)
 	}
 
 	if processedPackage.Classification == classificationInvalid {
@@ -60,6 +69,56 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 	app.toIndex <- processedPackage
 
 	return
+}
+
+// packageFromRepo attempts to get a package from the given package definition's public repo
+func packageFromRepo(
+	repo github.Repository,
+	meta versioning.DependencyMeta,
+) (pkg types.Package, err error) {
+	var resp *http.Response
+
+	resp, err = http.Get(fmt.Sprintf(
+		"https://raw.githubusercontent.com/%s/%s/%s/pawn.json",
+		meta.User, meta.Repo, *repo.DefaultBranch,
+	))
+	if err != nil {
+		return
+	}
+	if resp.StatusCode == 200 {
+		var contents []byte
+		contents, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return
+		}
+		err = json.Unmarshal(contents, &pkg)
+		return
+	}
+
+	zap.L().Debug("repo does not contain a pawn.json",
+		zap.String("meta", meta.String()))
+
+	resp, err = http.Get(fmt.Sprintf(
+		"https://raw.githubusercontent.com/%s/%s/%s/pawn.yaml",
+		meta.User, meta.Repo, *repo.DefaultBranch,
+	))
+	if err != nil {
+		return
+	}
+	if resp.StatusCode == 200 {
+		var contents []byte
+		contents, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return
+		}
+		err = yaml.Unmarshal(contents, &pkg)
+		return
+	}
+
+	zap.L().Debug("repo does not contain a pawn.yaml",
+		zap.String("meta", meta.String()))
+
+	return pkg, errors.New("package does not point to a valid remote package")
 }
 
 func (app *App) findPawnSource(ctx context.Context, repo github.Repository, meta versioning.DependencyMeta) (pkg Package, err error) {
