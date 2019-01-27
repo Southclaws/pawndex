@@ -47,7 +47,7 @@ func (app *App) runQuery(query string) (err error) {
 			total++
 		}
 
-		if total >= results.GetTotal() {
+		if total >= results.GetTotal() || total >= 1000 {
 			break
 		}
 
