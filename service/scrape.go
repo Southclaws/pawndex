@@ -45,8 +45,11 @@ func (app *App) scrapeRepo(ctx context.Context, repo github.Repository) (err err
 		}
 	}
 
-	if processedPackage.User == "" || processedPackage.Repo == "" {
-		return errors.Errorf("processed %s package details empty for %s/%s", processedPackage.Classification, meta.User, meta.Repo)
+	if processedPackage.User == "" {
+		processedPackage.User = meta.User
+	}
+	if processedPackage.Repo == "" {
+		processedPackage.Repo = meta.Repo
 	}
 
 	if processedPackage.Classification == classificationInvalid {
