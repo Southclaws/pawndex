@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/pprof"
+	"time"
 
 	"github.com/Masterminds/semver"
 	"github.com/gorilla/handlers"
@@ -56,16 +57,22 @@ func (app *App) runServer() {
 		}
 		latest, err := semver.NewVersion(p.Tags[0])
 		if err != nil {
+			zap.L().Error("failed to handle request", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/octet-stream")
-		w.Write([]byte{
+		_, err = w.Write([]byte{
 			byte(latest.Major()),
 			byte(latest.Minor()),
 			byte(latest.Patch()),
 		})
+		if err != nil {
+			zap.L().Error("failed to handle request", zap.Error(err))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	})
 	router.Handle("/metrics", promhttp.Handler())
 
@@ -78,12 +85,27 @@ func (app *App) runServer() {
 	zap.L().Info("listening for http requests",
 		zap.String("bind", app.config.Bind))
 
-	err := http.ListenAndServe(app.config.Bind, handlers.CORS(
-		handlers.AllowedHeaders([]string{"Cache-Control", "X-File-Name", "X-Requested-With", "X-File-Name", "Content-Type", "Authorization", "Set-Cookie", "Cookie"}),
-		handlers.AllowedOrigins([]string{"*"}),
-		handlers.AllowedMethods([]string{"OPTIONS", "GET", "HEAD", "POST", "PUT"}),
-		handlers.AllowCredentials(),
-	)(router))
+	s := http.Server{
+		Addr: app.config.Bind,
+		Handler: handlers.CORS(
+			handlers.AllowedHeaders([]string{
+				"Cache-Control",
+				"X-File-Name",
+				"X-Requested-With",
+				"X-File-Name",
+				"Content-Type",
+				"Authorization",
+				"Set-Cookie",
+				"Cookie",
+			}),
+			handlers.AllowedOrigins([]string{"*"}),
+			handlers.AllowedMethods([]string{"OPTIONS", "GET", "HEAD", "POST", "PUT"}),
+			handlers.AllowCredentials(),
+		)(router),
+		IdleTimeout: time.Minute,
+	}
+
+	err := s.ListenAndServe()
 
 	if err != nil {
 		zap.L().Fatal("serve failed",
