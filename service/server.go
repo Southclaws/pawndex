@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/pprof"
 
 	"github.com/Masterminds/semver"
 	"github.com/gorilla/handlers"
@@ -67,6 +68,12 @@ func (app *App) runServer() {
 		})
 	})
 	router.Handle("/metrics", promhttp.Handler())
+
+	router.HandleFunc("/debug/pprof/{v}", pprof.Index)
+	router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	router.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
 	zap.L().Info("listening for http requests",
 		zap.String("bind", app.config.Bind))
