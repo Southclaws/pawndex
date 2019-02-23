@@ -1,12 +1,14 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/Southclaws/sampctl/types"
 	"github.com/Southclaws/sampctl/versioning"
@@ -79,12 +81,18 @@ func packageFromRepo(
 	repo github.Repository,
 	meta versioning.DependencyMeta,
 ) (pkg types.Package, err error) {
-	var resp *http.Response
+	var client = http.Client{Timeout: time.Second * 10}
+	var body = bytes.NewBuffer(nil)
 
-	resp, err = http.Get(fmt.Sprintf(
+	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf(
 		"https://raw.githubusercontent.com/%s/%s/%s/pawn.json",
 		meta.User, meta.Repo, *repo.DefaultBranch,
-	))
+	), body)
+	if err != nil {
+		return
+	}
+
+	resp, err := client.Do(request)
 	if err != nil {
 		return
 	}
