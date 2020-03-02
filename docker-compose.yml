@@ -22,7 +22,7 @@ services:
       - default
     labels:
       traefik.enable: true
-      traefik.http.routers.pawndex.rule: Host(`packages.sampctl.com`)
+      traefik.http.routers.pawndex.rule: Host(`api.sampctl.com`)
       traefik.http.routers.pawndex.entrypoints: https
       traefik.http.routers.pawndex.tls.certresolver: default
       com.centurylinklabs.watchtower.enable: true
