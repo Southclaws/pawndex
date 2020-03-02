@@ -17,4 +17,6 @@ FROM scratch
 COPY --from=compile /pawndex/pawndex /bin/pawndex
 COPY --from=compile /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
+EXPOSE 80
+
 ENTRYPOINT ["pawndex"]
