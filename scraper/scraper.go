@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/Southclaws/sampctl/types"
@@ -24,14 +25,17 @@ import (
 // properties of a Pawn Package. This includes the presence of one or more .inc files and optionally
 // a pawn.json or pawn.yaml file. If one of these files exists, additional information is extracted.
 type Scraper interface {
-	Scrape(context.Context, github.Repository) (*pawn.Package, error)
+	Scrape(context.Context, string) (*pawn.Package, error)
 }
 
 type GitHubScraper struct {
 	gh *github.Client
 }
 
-func (g *GitHubScraper) Scrape(ctx context.Context, repo github.Repository) (*pawn.Package, error) {
+func (g *GitHubScraper) Scrape(ctx context.Context, name string) (*pawn.Package, error) {
+	splitname := strings.Split(name, "/")
+
+	repo, _, err := g.gh.Repositories.Get(ctx, splitname[0], splitname[1])
 	meta := versioning.DependencyMeta{
 		User: repo.Owner.GetLogin(),
 		Repo: repo.GetName(),
