@@ -71,6 +71,10 @@ func (db *DB) Get(name string) (pkg pawn.Package, exists bool, err error) {
 		if err := json.Unmarshal(raw, &p); err != nil {
 			return err
 		}
+		if p.Pkg.User == "" {
+			return nil
+		}
+
 		pkg = p.Pkg
 		exists = true
 

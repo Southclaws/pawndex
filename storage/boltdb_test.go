@@ -323,3 +323,55 @@ func TestDB_GetMarked2(t *testing.T) {
 		})
 	}
 }
+
+func TestDB_MarkForScrapeUnscraped(t *testing.T) {
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name    string
+		db      *DB
+		args    args
+		wantErr bool
+	}{
+		{"mark nonexistent", database, args{"Southclaws/TestPackage4"}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.db.MarkForScrape(tt.args.name); (err != nil) != tt.wantErr {
+				t.Errorf("DB.MarkForScrape() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestDB_GetUnscraped(t *testing.T) {
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name       string
+		db         *DB
+		args       args
+		wantPkg    pawn.Package
+		wantExists bool
+		wantErr    bool
+	}{
+		{"get none", database, args{"Southclaws/TestPackage4"}, pawn.Package{}, false, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotPkg, gotExists, err := tt.db.Get(tt.args.name)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DB.Get() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotPkg, tt.wantPkg) {
+				t.Errorf("DB.Get() gotPkg = %v, want %v", gotPkg, tt.wantPkg)
+			}
+			if gotExists != tt.wantExists {
+				t.Errorf("DB.Get() gotExists = %v, want %v", gotExists, tt.wantExists)
+			}
+		})
+	}
+}
