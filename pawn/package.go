@@ -1,6 +1,7 @@
 package pawn
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Southclaws/sampctl/types"
@@ -25,4 +26,8 @@ type Package struct {
 	Updated        time.Time      `json:"updated"`        // last updated
 	Topics         []string       `json:"topics"`         // GitHub topics
 	Tags           []string       `json:"tags"`           // Git tags
+}
+
+func (p *Package) String() string {
+	return fmt.Sprintf("%s/%s", p.User, p.Repo)
 }
