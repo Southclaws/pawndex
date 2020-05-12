@@ -4,6 +4,9 @@ import "github.com/Southclaws/pawndex/pawn"
 
 type Storer interface {
 	GetAll() ([]pawn.Package, error)
-	Get(string, string) (pawn.Package, bool, error)
+	Get(string) (pawn.Package, bool, error)
 	Set(pawn.Package) error
+
+	MarkForScrape(string) error
+	GetMarked() ([]pawn.Package, error)
 }
