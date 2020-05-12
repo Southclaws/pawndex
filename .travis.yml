@@ -1,10 +1,9 @@
 sudo: required
 services:
   - docker
-  - mongodb
 language: go
 go:
-  - "1.11"
+  - "1.14"
 env:
   - GO111MODULE=on
 script:
