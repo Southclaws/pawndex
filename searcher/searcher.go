@@ -2,31 +2,34 @@ package searcher
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 )
 
 type Searcher interface {
-	Search(string) ([]github.Repository, error)
+	Search(string) ([]string, error)
 }
 
 type GitHubSearcher struct {
 	gh *github.Client
 }
 
-func (g *GitHubSearcher) Search(query string) (repos []github.Repository, err error) {
+func (g *GitHubSearcher) Search(query string) (repos []string, err error) {
 	page := 0
 	for {
-		r, err := g.runQueryForPage(query, page + 1)
+		result, err := g.runQueryForPage(query, page+1)
 		if err != nil {
 			return nil, err
 		}
-		if len(r) == 0{
+		if len(result) == 0 {
 			break
 		}
 
-		repos = append(repos, r...)
+		for _, r := range result {
+			repos = append(repos, fmt.Sprintf("%s/%s", r.Owner.GetLogin(), r.GetName()))
+		}
 	}
 	return
 }
