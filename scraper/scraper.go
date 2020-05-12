@@ -36,6 +36,10 @@ func (g *GitHubScraper) Scrape(ctx context.Context, name string) (*pawn.Package,
 	splitname := strings.Split(name, "/")
 
 	repo, _, err := g.gh.Repositories.Get(ctx, splitname[0], splitname[1])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get repo metadata from github")
+	}
+
 	meta := versioning.DependencyMeta{
 		User: repo.Owner.GetLogin(),
 		Repo: repo.GetName(),
