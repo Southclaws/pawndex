@@ -17,12 +17,12 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	os.Remove("test.db")
 	db, err := New("test.db")
 	if err != nil {
 		panic(err)
 	}
 	database = db
-	defer os.Remove("test.db")
 
 	os.Exit(m.Run())
 }
