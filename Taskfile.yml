@@ -1,0 +1,11 @@
+version: "2"
+
+tasks:
+  default:
+    cmds:
+      - go build -o pawndex.exe
+      - ./pawndex.exe
+
+  test:
+    cmds:
+      - go test ./...

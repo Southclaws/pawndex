@@ -11,13 +11,12 @@ services:
     restart: on-failure
     environment:
       PAWNDEX_BIND: "0.0.0.0:80"
-      PAWNDEX_DOMAIN: packages.sampctl.com
       PAWNDEX_GITHUBTOKEN: "${GITHUB_TOKEN}"
       PAWNDEX_SEARCHINTERVAL: 6h
-      PAWNDEX_SCRAPEINTERVAL: 10s
-      PAWNDEX_CACHE: /cache/cache.json
+      PAWNDEX_SCRAPEINTERVAL: 30s
+      PAWNDEX_DATABASEPATH: /pawndex/pawndex.db
     volumes:
-      - "${DATA_DIR}/pawndex:/cache"
+      - "${DATA_DIR}/pawndex:/pawndex"
     networks:
       - default
     labels:

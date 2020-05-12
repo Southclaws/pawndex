@@ -17,3 +17,5 @@
 .env
 pawndex
 cache.json
+
+*.db
