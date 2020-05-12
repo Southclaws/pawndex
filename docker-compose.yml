@@ -12,7 +12,7 @@ services:
     environment:
       PAWNDEX_BIND: "0.0.0.0:80"
       PAWNDEX_GITHUBTOKEN: "${GITHUB_TOKEN}"
-      PAWNDEX_SEARCHINTERVAL: 30s
+      PAWNDEX_SEARCHINTERVAL: 6h
       PAWNDEX_SCRAPEINTERVAL: 30s
       PAWNDEX_DATABASEPATH: /pawndex/pawndex.db
     volumes:
