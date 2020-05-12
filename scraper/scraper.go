@@ -29,13 +29,13 @@ type Scraper interface {
 }
 
 type GitHubScraper struct {
-	gh *github.Client
+	GitHub *github.Client
 }
 
 func (g *GitHubScraper) Scrape(ctx context.Context, name string) (*pawn.Package, error) {
 	splitname := strings.Split(name, "/")
 
-	repo, _, err := g.gh.Repositories.Get(ctx, splitname[0], splitname[1])
+	repo, _, err := g.GitHub.Repositories.Get(ctx, splitname[0], splitname[1])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get repo metadata from github")
 	}
@@ -79,7 +79,7 @@ func (g *GitHubScraper) Scrape(ctx context.Context, name string) (*pawn.Package,
 	processedPackage.Updated = repo.GetUpdatedAt().Time
 	processedPackage.Topics = repo.Topics
 
-	tags, _, err := g.gh.Repositories.ListTags(ctx, meta.User, meta.Repo, nil)
+	tags, _, err := g.GitHub.Repositories.ListTags(ctx, meta.User, meta.Repo, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list repo tags")
 	}
@@ -92,7 +92,7 @@ func (g *GitHubScraper) Scrape(ctx context.Context, name string) (*pawn.Package,
 
 // packageFromRepo attempts to get a package from the given package definition's public repo
 func packageFromRepo(
-	repo github.Repository,
+	repo *github.Repository,
 	meta versioning.DependencyMeta,
 ) (pkg types.Package, err error) {
 	client := http.Client{Timeout: time.Second * 10}
@@ -146,9 +146,9 @@ func packageFromRepo(
 	return pkg, errors.New("package does not point to a valid remote package")
 }
 
-func (g *GitHubScraper) findPawnSource(ctx context.Context, repo github.Repository,
+func (g *GitHubScraper) findPawnSource(ctx context.Context, repo *github.Repository,
 	meta versioning.DependencyMeta) (pkg pawn.Package, err error) {
-	ref, _, err := g.gh.Git.GetRef(ctx, meta.User, meta.Repo,
+	ref, _, err := g.GitHub.Git.GetRef(ctx, meta.User, meta.Repo,
 		fmt.Sprintf("heads/%s", repo.GetDefaultBranch()))
 	if err != nil {
 		err = errors.Wrap(err, "failed to get HEAD ref from default branch")
@@ -156,7 +156,7 @@ func (g *GitHubScraper) findPawnSource(ctx context.Context, repo github.Reposito
 	}
 
 	sha := ref.GetObject().GetSHA()
-	tree, _, err := g.gh.Git.GetTree(ctx, meta.User, meta.Repo, sha, true)
+	tree, _, err := g.GitHub.Git.GetTree(ctx, meta.User, meta.Repo, sha, true)
 	if err != nil {
 		err = errors.Wrap(err, "failed to get git tree")
 		return

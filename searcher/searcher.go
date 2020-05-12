@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 type Searcher interface {
@@ -13,16 +14,17 @@ type Searcher interface {
 }
 
 type GitHubSearcher struct {
-	gh *github.Client
+	GitHub *github.Client
 }
 
 func (g *GitHubSearcher) Search(query string) (repos []string, err error) {
 	page := 0
 	for {
-		result, err := g.runQueryForPage(query, page+1)
+		result, err := g.runQueryForPage(query, page)
 		if err != nil {
 			return nil, err
 		}
+		zap.L().Debug("found repositories", zap.Int("count", len(result)), zap.Int("page", page))
 		if len(result) == 0 {
 			break
 		}
@@ -30,12 +32,13 @@ func (g *GitHubSearcher) Search(query string) (repos []string, err error) {
 		for _, r := range result {
 			repos = append(repos, fmt.Sprintf("%s/%s", r.Owner.GetLogin(), r.GetName()))
 		}
+		page += 1
 	}
 	return
 }
 
 func (g *GitHubSearcher) runQueryForPage(query string, page int) (repos []github.Repository, err error) {
-	results, _, err := g.gh.Search.Repositories(
+	results, _, err := g.GitHub.Search.Repositories(
 		context.Background(),
 		query,
 		&github.SearchOptions{ListOptions: github.ListOptions{
