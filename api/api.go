@@ -13,7 +13,7 @@ import (
 	"github.com/Southclaws/pawndex/storage"
 )
 
-func Run(store storage.Storer) error {
+func Run(bind string, store storage.Storer) error {
 	router := chi.NewMux()
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +95,7 @@ func Run(store storage.Storer) error {
 	})
 
 	s := http.Server{
-		Addr: "0.0.0.0:8080",
+		Addr: bind,
 		Handler: handlers.CORS(
 			handlers.AllowedHeaders([]string{
 				"Cache-Control",
