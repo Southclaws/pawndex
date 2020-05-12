@@ -136,8 +136,8 @@ func (db *DB) MarkForScrape(name string) error {
 	})
 }
 
-func (db *DB) GetMarked() ([]pawn.Package, error) {
-	packages := []pawn.Package{}
+func (db *DB) GetMarked() ([]string, error) {
+	packages := []string{}
 
 	if err := db.db.View(func(t *bolt.Tx) error {
 		bkt := t.Bucket(packagesBucket)
@@ -151,7 +151,7 @@ func (db *DB) GetMarked() ([]pawn.Package, error) {
 			}
 
 			if e.Marked {
-				packages = append(packages, e.Pkg)
+				packages = append(packages, string(k))
 			}
 		}
 

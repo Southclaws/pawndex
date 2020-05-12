@@ -8,5 +8,5 @@ type Storer interface {
 	Set(pawn.Package) error
 
 	MarkForScrape(string) error
-	GetMarked() ([]pawn.Package, error)
+	GetMarked() ([]string, error)
 }

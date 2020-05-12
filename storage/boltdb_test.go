@@ -226,21 +226,11 @@ func TestDB_GetMarked(t *testing.T) {
 	tests := []struct {
 		name    string
 		db      *DB
-		want    []pawn.Package
+		want    []string
 		wantErr bool
 	}{
-		{"marked", database, []pawn.Package{
-			{
-				Package: types.Package{
-					DependencyMeta: versioning.DependencyMeta{
-						User: "Southclaws",
-						Repo: "TestPackage2",
-					},
-				},
-				Classification: pawn.ClassificationPawnPackage,
-				Stars:          100,
-				Updated:        now,
-			},
+		{"marked", database, []string{
+			"Southclaws/TestPackage2",
 		}, false},
 	}
 	for _, tt := range tests {
@@ -282,32 +272,12 @@ func TestDB_GetMarked2(t *testing.T) {
 	tests := []struct {
 		name    string
 		db      *DB
-		want    []pawn.Package
+		want    []string
 		wantErr bool
 	}{
-		{"marked", database, []pawn.Package{
-			{
-				Package: types.Package{
-					DependencyMeta: versioning.DependencyMeta{
-						User: "Southclaws",
-						Repo: "TestPackage2",
-					},
-				},
-				Classification: pawn.ClassificationPawnPackage,
-				Stars:          100,
-				Updated:        now,
-			},
-			{
-				Package: types.Package{
-					DependencyMeta: versioning.DependencyMeta{
-						User: "Southclaws",
-						Repo: "TestPackage3",
-					},
-				},
-				Classification: pawn.ClassificationPawnPackage,
-				Stars:          100,
-				Updated:        now,
-			},
+		{"marked", database, []string{
+			"Southclaws/TestPackage2",
+			"Southclaws/TestPackage3",
 		}, false},
 	}
 	for _, tt := range tests {
