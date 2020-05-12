@@ -3,9 +3,11 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/Masterminds/semver"
 	"github.com/go-chi/chi"
+	"github.com/gorilla/handlers"
 	"go.uber.org/zap"
 
 	"github.com/Southclaws/pawndex/storage"
@@ -17,11 +19,13 @@ func Run(store storage.Storer) error {
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		all, err := store.GetAll()
 		if err != nil {
+			zap.L().Error("failed to handle request", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		if err := json.NewEncoder(w).Encode(all); err != nil {
+			zap.L().Error("failed to handle request", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -33,6 +37,7 @@ func Run(store storage.Storer) error {
 
 		p, exists, err := store.Get(user, repo)
 		if err != nil {
+			zap.L().Error("failed to handle request", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -43,6 +48,7 @@ func Run(store storage.Storer) error {
 		}
 
 		if err := json.NewEncoder(w).Encode(p); err != nil {
+			zap.L().Error("failed to handle request", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -54,6 +60,7 @@ func Run(store storage.Storer) error {
 
 		p, exists, err := store.Get(user, repo)
 		if err != nil {
+			zap.L().Error("failed to handle request", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -70,7 +77,7 @@ func Run(store storage.Storer) error {
 		latest, err := semver.NewVersion(p.Tags[0])
 		if err != nil {
 			zap.L().Error("failed to handle request", zap.Error(err))
-			w.WriteHeader(http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -82,10 +89,30 @@ func Run(store storage.Storer) error {
 		})
 		if err != nil {
 			zap.L().Error("failed to handle request", zap.Error(err))
-			w.WriteHeader(http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	})
 
-	return http.ListenAndServe("0.0.0.0:8080", router)
+	s := http.Server{
+		Addr: "0.0.0.0:8080",
+		Handler: handlers.CORS(
+			handlers.AllowedHeaders([]string{
+				"Cache-Control",
+				"X-File-Name",
+				"X-Requested-With",
+				"X-File-Name",
+				"Content-Type",
+				"Authorization",
+				"Set-Cookie",
+				"Cookie",
+			}),
+			handlers.AllowedOrigins([]string{"*"}),
+			handlers.AllowedMethods([]string{"OPTIONS", "GET", "HEAD", "POST", "PUT"}),
+			handlers.AllowCredentials(),
+		)(router),
+		IdleTimeout: time.Minute,
+	}
+
+	return s.ListenAndServe()
 }
