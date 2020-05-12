@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -13,8 +14,23 @@ import (
 	"github.com/Southclaws/pawndex/storage"
 )
 
-func Run(bind string, store storage.Storer) error {
+type Server struct {
+	server http.Server
+}
+
+func (s *Server) Run() error {
+	return s.server.ListenAndServe()
+}
+
+func New(bind string, store storage.Storer) Server {
 	router := chi.NewMux()
+
+	router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			next.ServeHTTP(w, r)
+		})
+	})
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		all, err := store.GetAll()
@@ -35,7 +51,7 @@ func Run(bind string, store storage.Storer) error {
 		user := chi.URLParam(r, "user")
 		repo := chi.URLParam(r, "repo")
 
-		p, exists, err := store.Get(user, repo)
+		p, exists, err := store.Get(fmt.Sprintf("%s/%s", user, repo))
 		if err != nil {
 			zap.L().Error("failed to handle request", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -58,7 +74,7 @@ func Run(bind string, store storage.Storer) error {
 		user := chi.URLParam(r, "user")
 		repo := chi.URLParam(r, "repo")
 
-		p, exists, err := store.Get(user, repo)
+		p, exists, err := store.Get(fmt.Sprintf("%s/%s", user, repo))
 		if err != nil {
 			zap.L().Error("failed to handle request", zap.Error(err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -94,7 +110,7 @@ func Run(bind string, store storage.Storer) error {
 		}
 	})
 
-	s := http.Server{
+	return Server{http.Server{
 		Addr: bind,
 		Handler: handlers.CORS(
 			handlers.AllowedHeaders([]string{
@@ -112,7 +128,5 @@ func Run(bind string, store storage.Storer) error {
 			handlers.AllowCredentials(),
 		)(router),
 		IdleTimeout: time.Minute,
-	}
-
-	return s.ListenAndServe()
+	}}
 }
