@@ -25,6 +25,16 @@ func New(path string) (*DB, error) {
 		return nil, err
 	}
 
+	if err := db.Update(func(t *bolt.Tx) error {
+		_, err := t.CreateBucketIfNotExists(packagesBucket)
+		if err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
 	return &DB{
 		db: db,
 	}, nil
