@@ -10,14 +10,26 @@ import (
 )
 
 type Searcher interface {
-	Search(string) ([]string, error)
+	Search(...string) ([]string, error)
 }
 
 type GitHubSearcher struct {
 	GitHub *github.Client
 }
 
-func (g *GitHubSearcher) Search(query string) (repos []string, err error) {
+func (g *GitHubSearcher) Search(queries ...string) ([]string, error) {
+	var repos []string
+	for _, q := range queries {
+		r, err := g.doPagedSearch(q)
+		if err != nil {
+			return nil, err
+		}
+		repos = append(repos, r...)
+	}
+	return repos, nil
+}
+
+func (g *GitHubSearcher) doPagedSearch(query string) (repos []string, err error) {
 	page := 0
 	for {
 		result, err := g.runQueryForPage(query, page)

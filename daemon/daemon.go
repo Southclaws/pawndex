@@ -26,7 +26,7 @@ func (d *Daemon) Run(ctx context.Context) {
 		select {
 		case <-search.C:
 			zap.L().Debug("starting search job")
-			repos, err := d.Searcher.Search("topic:pawn-package")
+			repos, err := d.Searcher.Search("topic:pawn-package", "language:pawn", "topic:sa-mp")
 			if err != nil {
 				return err
 			}
