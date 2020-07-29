@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Southclaws/pawndex/pawn"
-	"github.com/Southclaws/sampctl/types"
+	"github.com/Southclaws/sampctl/pawnpackage"
 	"github.com/Southclaws/sampctl/versioning"
 )
 
@@ -38,7 +38,7 @@ func TestDB_Set(t *testing.T) {
 		wantErr bool
 	}{
 		{"insert 1", database, args{pawn.Package{
-			Package: types.Package{
+			Package: pawnpackage.Package{
 				DependencyMeta: versioning.DependencyMeta{
 					User: "Southclaws",
 					Repo: "TestPackage1",
@@ -49,7 +49,7 @@ func TestDB_Set(t *testing.T) {
 			Updated:        now,
 		}}, false},
 		{"insert 2", database, args{pawn.Package{
-			Package: types.Package{
+			Package: pawnpackage.Package{
 				DependencyMeta: versioning.DependencyMeta{
 					User: "Southclaws",
 					Repo: "TestPackage2",
@@ -60,7 +60,7 @@ func TestDB_Set(t *testing.T) {
 			Updated:        now,
 		}}, false},
 		{"insert 3", database, args{pawn.Package{
-			Package: types.Package{
+			Package: pawnpackage.Package{
 				DependencyMeta: versioning.DependencyMeta{
 					User: "Southclaws",
 					Repo: "TestPackage3",
@@ -93,7 +93,7 @@ func TestDB_Get(t *testing.T) {
 		wantErr    bool
 	}{
 		{"get 1", database, args{"Southclaws/TestPackage1"}, pawn.Package{
-			Package: types.Package{
+			Package: pawnpackage.Package{
 				DependencyMeta: versioning.DependencyMeta{
 					User: "Southclaws",
 					Repo: "TestPackage1",
@@ -104,7 +104,7 @@ func TestDB_Get(t *testing.T) {
 			Updated:        now,
 		}, true, false},
 		{"get 2", database, args{"Southclaws/TestPackage2"}, pawn.Package{
-			Package: types.Package{
+			Package: pawnpackage.Package{
 				DependencyMeta: versioning.DependencyMeta{
 					User: "Southclaws",
 					Repo: "TestPackage2",
@@ -115,7 +115,7 @@ func TestDB_Get(t *testing.T) {
 			Updated:        now,
 		}, true, false},
 		{"get 3", database, args{"Southclaws/TestPackage3"}, pawn.Package{
-			Package: types.Package{
+			Package: pawnpackage.Package{
 				DependencyMeta: versioning.DependencyMeta{
 					User: "Southclaws",
 					Repo: "TestPackage3",
@@ -153,7 +153,7 @@ func TestDB_GetAll(t *testing.T) {
 	}{
 		{"all", database, []pawn.Package{
 			{
-				Package: types.Package{
+				Package: pawnpackage.Package{
 					DependencyMeta: versioning.DependencyMeta{
 						User: "Southclaws",
 						Repo: "TestPackage1",
@@ -164,7 +164,7 @@ func TestDB_GetAll(t *testing.T) {
 				Updated:        now,
 			},
 			{
-				Package: types.Package{
+				Package: pawnpackage.Package{
 					DependencyMeta: versioning.DependencyMeta{
 						User: "Southclaws",
 						Repo: "TestPackage2",
@@ -175,7 +175,7 @@ func TestDB_GetAll(t *testing.T) {
 				Updated:        now,
 			},
 			{
-				Package: types.Package{
+				Package: pawnpackage.Package{
 					DependencyMeta: versioning.DependencyMeta{
 						User: "Southclaws",
 						Repo: "TestPackage3",

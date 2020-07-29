@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Southclaws/sampctl/types"
+	"github.com/Southclaws/sampctl/pawnpackage"
 )
 
 // Classification represents how compatible or easy to use a package is. If a package contains a
@@ -20,7 +20,7 @@ var (
 
 // Package wraps types.Package and adds extra fields
 type Package struct {
-	types.Package
+	pawnpackage.Package
 	Classification Classification `json:"classification"` // classification represents how conformative the package is
 	Stars          int            `json:"stars"`          // GitHub stars
 	Updated        time.Time      `json:"updated"`        // last updated

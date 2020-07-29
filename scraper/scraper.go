@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Southclaws/sampctl/types"
+	"github.com/Southclaws/sampctl/pawnpackage"
 	"github.com/Southclaws/sampctl/versioning"
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
@@ -94,7 +94,7 @@ func (g *GitHubScraper) Scrape(ctx context.Context, name string) (*pawn.Package,
 func packageFromRepo(
 	repo *github.Repository,
 	meta versioning.DependencyMeta,
-) (pkg types.Package, err error) {
+) (pkg pawnpackage.Package, err error) {
 	client := http.Client{Timeout: time.Second * 10}
 	body := bytes.NewBuffer(nil)
 
@@ -162,7 +162,7 @@ func (g *GitHubScraper) findPawnSource(ctx context.Context, repo *github.Reposit
 		return
 	}
 
-	pkg = pawn.Package{Package: types.Package{DependencyMeta: meta}}
+	pkg = pawn.Package{Package: pawnpackage.Package{DependencyMeta: meta}}
 
 	for _, file := range tree.Entries {
 		ext := filepath.Ext(file.GetPath())
