@@ -22,7 +22,7 @@ func (g *GitHubSearcher) Search(queries ...string) ([]string, error) {
 	for _, q := range queries {
 		r, err := g.doPagedSearch(q)
 		if err != nil {
-			return nil, err
+			zap.L().Warn("paged search failed", zap.Error(err), zap.Int("results", len(r)))
 		}
 		repos = append(repos, r...)
 	}
@@ -32,9 +32,10 @@ func (g *GitHubSearcher) Search(queries ...string) ([]string, error) {
 func (g *GitHubSearcher) doPagedSearch(query string) (repos []string, err error) {
 	page := 0
 	for {
-		result, err := g.runQueryForPage(query, page)
+		var result []github.Repository
+		result, err = g.runQueryForPage(query, page)
 		if err != nil {
-			return nil, err
+			break
 		}
 		zap.L().Debug("found repositories", zap.Int("count", len(result)), zap.Int("page", page))
 		if len(result) == 0 {
