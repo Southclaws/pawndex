@@ -7,7 +7,7 @@ RUN apt-get update -y && apt-get install --no-install-recommends -y -q build-ess
 
 WORKDIR /pawndex
 ADD . .
-RUN make static
+RUN CGO_ENABLED=0 GOOS=linux go build -a -o pawndex .
 
 # -
 # Runtime
