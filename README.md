@@ -17,7 +17,9 @@ Run your own instance with docker. Simply clone this repo, create an `.env` file
 PAWNDEX_BIND=0.0.0.0:80
 PAWNDEX_GITHUBTOKEN=abc123
 PAWNDEX_SEARCHINTERVAL=1h
-DEBUG=1
+PAWNDEX_SCRAPEINTERVAL=30s
+PAWNDEX_DATABASEPATH=pawndex.db
+LOG_LEVEL=debug
 ```
 
 - Bind is the interface to bind to, inside the container this is always 0.0.0.0:80.
