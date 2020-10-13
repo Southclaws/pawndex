@@ -15,6 +15,7 @@ services:
       PAWNDEX_SEARCHINTERVAL: 6h
       PAWNDEX_SCRAPEINTERVAL: 30s
       PAWNDEX_DATABASEPATH: /pawndex/pawndex.db
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
     volumes:
       - "${DATA_DIR}/pawndex:/pawndex"
     networks:
