@@ -57,6 +57,9 @@ func (db *DB) GetAll() ([]pawn.Package, error) {
 			if err := json.Unmarshal(raw, &e); err != nil {
 				return err
 			}
+			if e.Pkg.Repo == "" {
+				continue
+			}
 
 			packages = append(packages, e.Pkg)
 		}
